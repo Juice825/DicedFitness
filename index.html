@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DICED FITNESS — Roll. Rep. Repeat.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --fire: #FF6B35;
+  --blood: #FF2D2D;
+  --dark: #0a0a1a;
+  --card: #111128;
+  --border: rgba(255,107,53,0.12);
+  --text: #e0e0e0;
+  --muted: #666;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--dark);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Grain */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.3;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* Typography */
+.gradient{background:linear-gradient(135deg,var(--fire),var(--blood));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.section-label{
+  font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:4px;text-transform:uppercase;
+  color:var(--fire);margin-bottom:14px;display:flex;align-items:center;gap:12px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes pulseGlow{0%,100%{opacity:0.6}50%{opacity:1}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.fade-up{animation:fadeUp 0.6s ease both}
+.fade-up-d1{animation-delay:0.1s}
+.fade-up-d2{animation-delay:0.2s}
+.fade-up-d3{animation-delay:0.3s}
+.fade-up-d4{animation-delay:0.4s}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  padding:16px 32px;display:flex;justify-content:space-between;align-items:center;
+  background:rgba(10,10,26,0.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:3px;background:linear-gradient(135deg,var(--fire),var(--blood));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:0.8rem;font-weight:500;letter-spacing:0.5px;transition:color 0.2s}
+.nav-links a:hover{color:#fff}
+.nav-cta{
+  padding:8px 20px;border-radius:8px;border:none;font-weight:700;font-size:0.7rem;letter-spacing:1.5px;cursor:pointer;
+  background:linear-gradient(135deg,var(--fire),var(--blood));color:#fff;transition:transform 0.2s,box-shadow 0.2s;
+}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(255,107,53,0.4)}
+
+/* HERO */
+.hero{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:120px 40px 80px;position:relative;overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 30% 50%,rgba(255,107,53,0.06) 0%,transparent 60%),
+             radial-gradient(ellipse at 70% 30%,rgba(255,45,45,0.04) 0%,transparent 50%);
+}
+.hero-dice-bg{position:absolute;inset:0;pointer-events:none}
+.dice-shape{
+  position:absolute;border:2px solid rgba(255,107,53,0.08);border-radius:20%;
+  animation:float 4s ease-in-out infinite;
+}
+.dice-shape:nth-child(2n){animation-delay:-2s}
+.dice-shape:nth-child(3n){animation-delay:-1s}
+.hero-content{
+  display:flex;align-items:center;gap:80px;max-width:1200px;width:100%;position:relative;z-index:1;
+}
+.hero-left{max-width:560px}
+.hero-badge{
+  display:inline-block;padding:6px 16px;border-radius:30px;font-size:0.7rem;font-weight:600;letter-spacing:2px;
+  background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);color:var(--fire);margin-bottom:20px;
+}
+.hero-title{
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(4rem,10vw,7rem);line-height:0.9;letter-spacing:4px;margin-bottom:10px;
+}
+.hero-subtitle{
+  font-size:0.85rem;color:var(--fire);letter-spacing:6px;font-weight:600;margin-bottom:16px;
+  animation:pulseGlow 3s ease-in-out infinite;
+}
+.hero-desc{font-size:0.95rem;color:var(--muted);line-height:1.8;margin-bottom:32px;max-width:460px}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+.btn-primary{
+  padding:14px 32px;border-radius:12px;border:none;font-weight:700;font-size:0.8rem;letter-spacing:1.5px;cursor:pointer;
+  background:linear-gradient(135deg,var(--fire),var(--blood));color:#fff;transition:all 0.2s;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,107,53,0.4)}
+.btn-secondary{
+  padding:14px 32px;border-radius:12px;border:2px solid rgba(255,255,255,0.1);background:transparent;
+  color:#ccc;font-weight:600;font-size:0.8rem;letter-spacing:1px;cursor:pointer;transition:all 0.2s;
+}
+.btn-secondary:hover{border-color:var(--fire);color:var(--fire)}
+
+/* Phone mockup */
+.hero-right{position:relative}
+.phone-mockup{
+  width:280px;height:560px;border-radius:40px;border:3px solid rgba(255,255,255,0.1);
+  background:linear-gradient(145deg,#0a0a1a,#1a1a2e);overflow:hidden;position:relative;
+  box-shadow:0 30px 80px rgba(0,0,0,0.5),0 0 60px rgba(255,107,53,0.08);
+}
+.phone-notch{width:120px;height:28px;background:#000;border-radius:0 0 16px 16px;margin:0 auto;position:relative;z-index:2}
+.phone-screen{padding:20px 18px;display:flex;flex-direction:column;align-items:center}
+.phone-logo{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:4px;background:linear-gradient(135deg,var(--fire),var(--blood));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-top:8px}
+.phone-sub{font-size:0.5rem;color:var(--fire);letter-spacing:5px;font-weight:600;margin-bottom:24px}
+.phone-menu{width:100%;display:flex;flex-direction:column;gap:10px}
+.phone-menu-item{
+  display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);
+}
+.phone-menu-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.phone-menu-text{font-size:0.75rem;font-weight:700;color:#fff;letter-spacing:0.5px}
+.phone-menu-sub{font-size:0.6rem;color:#555;margin-top:1px}
+.mini-die{
+  width:28px;height:28px;border-radius:5px;background:linear-gradient(135deg,var(--fire),var(--blood));
+  display:flex;align-items:center;justify-content:center;position:relative;
+}
+.dot{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff}
+
+/* STATS BAR */
+.stats{padding:0 40px}
+.stats-inner{
+  max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);
+  background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;gap:20px;
+}
+.stat{text-align:center}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--fire);line-height:1}
+.stat-label{font-size:0.7rem;color:var(--muted);letter-spacing:2px;margin-top:4px;text-transform:uppercase}
+
+/* FEATURES */
+.features{padding:100px 40px}
+.features-inner{max-width:1200px;margin:0 auto}
+.features h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3.5rem);letter-spacing:3px;margin-bottom:50px}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feature-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;
+  position:relative;overflow:hidden;transition:transform 0.2s,border-color 0.2s;
+}
+.feature-card:hover{transform:translateY(-4px);border-color:rgba(255,107,53,0.3)}
+.feature-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--fire),var(--blood));border-radius:3px 0 0 3px}
+.feature-icon{font-size:1.8rem;margin-bottom:14px}
+.feature-title{font-weight:700;font-size:0.95rem;color:#fff;margin-bottom:8px}
+.feature-desc{font-size:0.8rem;color:var(--muted);line-height:1.7}
+
+/* HOW IT WORKS */
+.how-it-works{padding:100px 40px;position:relative}
+.how-inner{max-width:1200px;margin:0 auto}
+.how-it-works h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3.5rem);letter-spacing:3px;margin-bottom:50px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;position:relative}
+.steps::before{content:'';position:absolute;top:50px;left:15%;right:15%;height:2px;background:var(--border)}
+.step{text-align:center;position:relative}
+.step-num{
+  width:64px;height:64px;border-radius:50%;margin:0 auto 20px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--fire);
+  border:2px solid var(--fire);background:var(--dark);position:relative;z-index:1;
+}
+.step-title{font-weight:700;font-size:1rem;color:#fff;margin-bottom:8px}
+.step-desc{font-size:0.8rem;color:var(--muted);line-height:1.7;max-width:280px;margin:0 auto}
+
+/* EQUIPMENT */
+.equipment{padding:100px 40px}
+.equip-inner{max-width:1200px;margin:0 auto}
+.equipment h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3.5rem);letter-spacing:3px;margin-bottom:50px}
+.equip-grid{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.equip-tag{
+  padding:14px 24px;border-radius:12px;border:1px solid var(--border);background:var(--card);
+  font-size:0.85rem;font-weight:600;color:#ccc;display:flex;align-items:center;gap:8px;transition:all 0.2s;
+}
+.equip-tag:hover{border-color:var(--fire);transform:translateY(-2px)}
+.equip-more{
+  padding:14px 24px;border-radius:12px;border:1px dashed rgba(255,255,255,0.15);
+  font-size:0.85rem;color:var(--muted);font-weight:500;
+}
+
+/* FOR GYMS */
+.for-gyms{padding:100px 40px;background:linear-gradient(180deg,transparent,rgba(255,107,53,0.02),transparent)}
+.gym-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.for-gyms h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3.5rem);letter-spacing:3px;margin-bottom:16px}
+.gym-desc{font-size:0.9rem;color:var(--muted);line-height:1.8;margin-bottom:30px}
+.gym-features{display:flex;flex-direction:column;gap:14px}
+.gym-feat{display:flex;align-items:center;gap:12px;font-size:0.85rem;color:#ccc}
+.gym-feat-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,107,53,0.1);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.gym-preview{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+}
+.gym-preview-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.gym-preview-title{font-weight:700;font-size:0.85rem;color:#fff}
+.gym-preview-badge{font-size:0.6rem;padding:4px 10px;border-radius:20px;background:rgba(46,204,113,0.1);color:#2ECC71;border:1px solid rgba(46,204,113,0.2)}
+.gym-bar-chart{display:flex;align-items:flex-end;gap:8px;height:120px;margin-top:12px}
+.gym-bar{flex:1;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--fire),var(--blood));opacity:0.7;transition:opacity 0.2s}
+.gym-bar:hover{opacity:1}
+.gym-bar-label{text-align:center;font-size:0.55rem;color:var(--muted);margin-top:6px}
+
+/* CTA / SIGNUP */
+.cta-section{padding:100px 40px}
+.cta-inner{
+  max-width:700px;margin:0 auto;text-align:center;
+  background:var(--card);border:1px solid var(--border);border-radius:24px;padding:60px 40px;
+  position:relative;overflow:hidden;
+}
+.cta-inner::before{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(circle,rgba(255,107,53,0.04) 0%,transparent 60%);pointer-events:none;
+}
+.cta-section h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3rem);letter-spacing:3px;margin-bottom:10px;position:relative}
+.cta-sub{font-size:0.85rem;color:var(--muted);margin-bottom:30px;position:relative}
+.email-form{display:flex;gap:10px;max-width:440px;margin:0 auto;position:relative}
+.email-form input{
+  flex:1;padding:14px 18px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.04);color:#fff;font-size:0.85rem;font-family:'DM Sans',sans-serif;outline:none;
+  transition:border-color 0.2s;
+}
+.email-form input:focus{border-color:var(--fire)}
+.email-form input::placeholder{color:#444}
+.email-form button{
+  padding:14px 28px;border-radius:12px;border:none;font-weight:700;font-size:0.8rem;letter-spacing:1px;cursor:pointer;
+  background:linear-gradient(135deg,var(--fire),var(--blood));color:#fff;white-space:nowrap;transition:all 0.2s;
+}
+.email-form button:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(255,107,53,0.4)}
+.cta-note{font-size:0.7rem;color:#444;margin-top:12px;position:relative}
+#successMsg{
+  display:none;margin-top:16px;padding:12px 20px;border-radius:10px;
+  background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.3);color:#2ECC71;font-weight:600;font-size:0.85rem;
+  position:relative;
+}
+
+/* FOOTER */
+footer{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;
+  padding:40px;border-top:1px solid var(--border);max-width:1200px;margin:0 auto;
+}
+.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:3px;color:#333}
+.footer-links{display:flex;gap:20px}
+.footer-links a{color:#444;text-decoration:none;font-size:0.75rem;transition:color 0.2s}
+.footer-links a:hover{color:var(--fire)}
+.footer-copy{font-size:0.65rem;color:#333;letter-spacing:1px}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  nav{padding:12px 20px}
+  .nav-links a{display:none}
+  .hero-content{flex-direction:column;text-align:center}
+  .hero-left{max-width:100%}
+  .hero-desc{margin-left:auto;margin-right:auto}
+  .hero-actions{justify-content:center}
+  .hero-right{order:-1}
+  .phone-mockup{width:220px;height:440px}
+  .stats-inner{grid-template-columns:repeat(2,1fr)}
+  .features-grid{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr;gap:30px}
+  .steps::before{display:none}
+  .gym-inner{grid-template-columns:1fr}
+  .email-form{flex-direction:column}
+  footer{flex-direction:column;text-align:center}
+}
+@media(max-width:600px){
+  .hero{padding:100px 20px 60px}
+  .features,.equipment{padding:60px 20px}
+  .how-it-works,.for-gyms,.cta-section{padding:60px 20px}
+  .equip-grid{gap:8px}
+  .equip-tag{padding:10px 16px;font-size:0.78rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">DICED</div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How It Works</a>
+    <a href="#gyms">For Gyms</a>
+    <button class="nav-cta" onclick="document.getElementById('signup').scrollIntoView({behavior:'smooth'})">GET EARLY ACCESS</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-dice-bg">
+    <div class="dice-shape" style="width:50px;height:50px;top:10%;left:8%;transform:rotate(-15deg)"></div>
+    <div class="dice-shape" style="width:35px;height:35px;top:25%;right:12%;transform:rotate(20deg)"></div>
+    <div class="dice-shape" style="width:45px;height:45px;bottom:20%;left:15%;transform:rotate(10deg)"></div>
+    <div class="dice-shape" style="width:30px;height:30px;top:60%;right:8%;transform:rotate(-25deg)"></div>
+    <div class="dice-shape" style="width:40px;height:40px;bottom:35%;right:25%;transform:rotate(15deg)"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-left">
+      <div class="hero-badge fade-up">🎲 COMING SOON TO APP STORE</div>
+      <h1 class="hero-title fade-up fade-up-d1">
+        <span class="gradient">DICED</span><br>
+        <span style="color:#fff">FITNESS</span>
+      </h1>
+      <p class="hero-subtitle fade-up fade-up-d2">Roll · Rep · Repeat</p>
+      <p class="hero-desc fade-up fade-up-d3">
+        The dice decide your workout. Roll for reps, pick your exercise, track your weight, beat your PR. No boring routines. No planning. Just roll and go.
+      </p>
+      <div class="hero-actions fade-up fade-up-d4">
+        <button class="btn-primary" onclick="document.getElementById('signup').scrollIntoView({behavior:'smooth'})">GET EARLY ACCESS</button>
+        <button class="btn-secondary" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">SEE HOW IT WORKS</button>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="phone-mockup">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div style="display:flex;gap:6px;margin-bottom:12px;animation:float 3s ease-in-out infinite">
+            <div class="mini-die"><div class="dot" style="top:50%;left:50%;transform:translate(-50%,-50%)"></div></div>
+            <div class="mini-die">
+              <div class="dot" style="top:25%;left:25%;transform:translate(-50%,-50%)"></div>
+              <div class="dot" style="top:75%;left:75%;transform:translate(-50%,-50%)"></div>
+            </div>
+            <div class="mini-die">
+              <div class="dot" style="top:25%;left:25%;transform:translate(-50%,-50%)"></div>
+              <div class="dot" style="top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+              <div class="dot" style="top:75%;left:75%;transform:translate(-50%,-50%)"></div>
+            </div>
+          </div>
+          <div class="phone-logo">DICED</div>
+          <div class="phone-sub">FITNESS</div>
+          <div class="phone-menu">
+            <div class="phone-menu-item">
+              <div class="phone-menu-icon" style="background:linear-gradient(135deg,var(--fire),var(--blood))">🎲</div>
+              <div><div class="phone-menu-text">START WORKOUT</div><div class="phone-menu-sub">Roll the dice</div></div>
+            </div>
+            <div class="phone-menu-item">
+              <div class="phone-menu-icon" style="background:linear-gradient(135deg,#3498DB,#2980B9)">📋</div>
+              <div><div class="phone-menu-text">HISTORY</div><div class="phone-menu-sub">Past workouts</div></div>
+            </div>
+            <div class="phone-menu-item">
+              <div class="phone-menu-icon" style="background:linear-gradient(135deg,#2ECC71,#27AE60)">➕</div>
+              <div><div class="phone-menu-text">CUSTOM</div><div class="phone-menu-sub">Your exercises</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<section class="stats">
+  <div class="stats-inner">
+    <div class="stat"><div class="stat-num">465+</div><div class="stat-label">Exercises</div></div>
+    <div class="stat"><div class="stat-num">7</div><div class="stat-label">Equipment Types</div></div>
+    <div class="stat"><div class="stat-num">24</div><div class="stat-label">Muscle Groups</div></div>
+    <div class="stat"><div class="stat-num">∞</div><div class="stat-label">Workout Combos</div></div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-inner">
+    <div class="section-label">Why Diced Hits Different</div>
+    <h2><span class="gradient">EVERY WORKOUT</span> IS A GAMBLE</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🎲</div>
+        <div class="feature-title">Dice-Based Reps</div>
+        <div class="feature-desc">Roll the dice to determine your rep count. Every set is different. Every workout is unpredictable. That's the point.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <div class="feature-title">Smart Rotation</div>
+        <div class="feature-desc">Set how many sets per exercise before it rotates to a new one. Stay focused or keep it moving — your call.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏋️</div>
+        <div class="feature-title">Weight Tracking</div>
+        <div class="feature-desc">Log your weight for every set. Track your progress over time. Hit PRs and get recognized for it.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-title">Muscle Targeting</div>
+        <div class="feature-desc">Pick exactly which muscle groups to hit. Chest day? Full body? Just arms? You choose, the dice handle the rest.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✏️</div>
+        <div class="feature-title">Custom Exercises</div>
+        <div class="feature-desc">Got a move that's uniquely yours? Add it to the library. Full CRUD — create, edit, delete your custom exercises.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Workout History</div>
+        <div class="feature-desc">Every session saved. Total reps, exercises hit, duration, personal records. Your entire fitness story in one place.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-it-works" id="how">
+  <div class="how-inner">
+    <div class="section-label">How It Works</div>
+    <h2><span class="gradient">THREE STEPS.</span> ZERO PLANNING.</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Pick Your Setup</div>
+        <div class="step-desc">Choose your equipment, target muscles, dice count, rotation speed, and total rolls. Make it yours.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">Roll The Dice</div>
+        <div class="step-desc">Hit the button. The dice roll. Your reps are set. An exercise from your selection pops up. Time to work.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Get Diced</div>
+        <div class="step-desc">Log your weight, track your sets, chase PRs, and review your full session summary when you're done.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EQUIPMENT -->
+<section class="equipment">
+  <div class="equip-inner">
+    <div class="section-label">Equipment Support</div>
+    <h2><span class="gradient">YOUR GYM.</span> YOUR GEAR.</h2>
+    <div class="equip-grid">
+      <div class="equip-tag">🏋️ Dumbbells</div>
+      <div class="equip-tag">🔗 Cable Machine</div>
+      <div class="equip-tag">🤸 Bodyweight</div>
+      <div class="equip-tag">💪 Barbell</div>
+      <div class="equip-tag">🔩 Smith Machine</div>
+      <div class="equip-tag">🫎 Kettlebell</div>
+      <div class="equip-tag">🪢 Resistance Bands</div>
+      <div class="equip-more">+ More Coming</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOR GYMS -->
+<section class="for-gyms" id="gyms">
+  <div class="gym-inner">
+    <div>
+      <div class="section-label">For Gym Owners</div>
+      <h2><span class="gradient">YOUR GYM.</span> YOUR DASHBOARD.</h2>
+      <p class="gym-desc">Diced isn't just for individuals. Gym owners get a full command center to track equipment usage, manage trainers, monitor member activity, and make data-driven decisions.</p>
+      <div class="gym-features">
+        <div class="gym-feat"><div class="gym-feat-icon">📈</div>Equipment analytics &amp; usage trends</div>
+        <div class="gym-feat"><div class="gym-feat-icon">👥</div>Trainer portal with client management</div>
+        <div class="gym-feat"><div class="gym-feat-icon">🔥</div>Member retention tracking</div>
+        <div class="gym-feat"><div class="gym-feat-icon">⏰</div>Peak hour &amp; capacity insights</div>
+      </div>
+    </div>
+    <div class="gym-preview">
+      <div class="gym-preview-header">
+        <div class="gym-preview-title">📊 Weekly Activity</div>
+        <div class="gym-preview-badge">● Live</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+        <div><div style="font-size:1.6rem;font-weight:800;color:#fff">2,847</div><div style="font-size:0.65rem;color:var(--muted)">Total Sessions</div></div>
+        <div style="text-align:right"><div style="font-size:1.6rem;font-weight:800;color:#2ECC71">+12%</div><div style="font-size:0.65rem;color:var(--muted)">vs Last Week</div></div>
+      </div>
+      <div class="gym-bar-chart">
+        <div><div class="gym-bar" style="height:60px"></div><div class="gym-bar-label">Mon</div></div>
+        <div><div class="gym-bar" style="height:85px"></div><div class="gym-bar-label">Tue</div></div>
+        <div><div class="gym-bar" style="height:70px"></div><div class="gym-bar-label">Wed</div></div>
+        <div><div class="gym-bar" style="height:95px"></div><div class="gym-bar-label">Thu</div></div>
+        <div><div class="gym-bar" style="height:110px"></div><div class="gym-bar-label">Fri</div></div>
+        <div><div class="gym-bar" style="height:100px"></div><div class="gym-bar-label">Sat</div></div>
+        <div><div class="gym-bar" style="height:55px"></div><div class="gym-bar-label">Sun</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SIGNUP CTA -->
+<section class="cta-section" id="signup">
+  <div class="cta-inner">
+    <div class="section-label" style="justify-content:center">Early Access</div>
+    <h2><span class="gradient">BE FIRST</span> TO ROLL</h2>
+    <p class="cta-sub">Drop your email. We'll hit you up when Diced is ready to download.</p>
+    <div class="email-form">
+      <input type="email" id="emailInput" placeholder="your@email.com">
+      <button onclick="handleSignup()">NOTIFY ME</button>
+    </div>
+    <p class="cta-note">No spam. No nonsense. Unsubscribe anytime.</p>
+    <div id="successMsg">You're in! We'll notify you when Diced drops. 🎲</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">DICED FITNESS</div>
+  <div class="footer-links">
+    <a href="#features">Features</a>
+    <a href="#how">How It Works</a>
+    <a href="#gyms">For Gyms</a>
+    <a href="mailto:hello@dicedfitness.com">Contact</a>
+  </div>
+  <div class="footer-copy">© 2026 Diced Fitness LLC. All rights reserved.</div>
+</footer>
+
+<script>
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.animationPlayState = 'running';
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.fade-up').forEach(el => {
+  el.style.animationPlayState = 'paused';
+  observer.observe(el);
+});
+
+function handleSignup() {
+  const email = document.getElementById('emailInput').value;
+  if (email && email.includes('@')) {
+    document.getElementById('successMsg').style.display = 'block';
+    document.getElementById('emailInput').value = '';
+  }
+}
+
+document.getElementById('emailInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') handleSignup();
+});
+</script>
+
+</body>
+</html>
