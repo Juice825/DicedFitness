@@ -1,3 +1,4 @@
 serviceaccountkey.json
 node_modules/
 .env
+diced-dcd86-firebase-adminsdk-*
