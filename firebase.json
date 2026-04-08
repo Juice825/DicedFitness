@@ -1,0 +1,39 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "App.js",
+      "index.js",
+      "firebase.js",
+      "seed.js",
+      "new_exercises.js",
+      "**/package*.json",
+      "**/app.json",
+      "**/*-firebase-adminsdk-*.json",
+      "firestore.rules",
+      "firestore.indexes.json"
+    ],
+    "rewrites": [
+      { "source": "/dashboard", "destination": "/dashboard.html" }
+    ],
+    "headers": [
+      {
+        "source": "/dashboard.html",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-store" },
+          { "key": "X-Frame-Options", "value": "DENY" },
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "Referrer-Policy", "value": "no-referrer" }
+        ]
+      }
+    ],
+    "cleanUrls": true
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

@@ -1,0 +1,737 @@
+import { useState, useMemo } from "react";
+
+// ============================================================
+// SIMULATED DATA
+// ============================================================
+const MOCK_USERS = [
+  { id: 1, email: "mike.rivera@gmail.com", name: "Mike Rivera", joined: "2026-03-15", workouts: 24, status: "premium", expires: "2027-03-15", lastActive: "2026-04-06", gymId: 1 },
+  { id: 2, email: "sarah.kim@yahoo.com", name: "Sarah Kim", joined: "2026-03-20", workouts: 18, status: "trial", expires: null, lastActive: "2026-04-07", gymId: 1 },
+  { id: 3, email: "jay.thompson@outlook.com", name: "Jay Thompson", joined: "2026-03-22", workouts: 9, status: "trial", expires: null, lastActive: "2026-04-05", gymId: 2 },
+  { id: 4, email: "lisa.morales@gmail.com", name: "Lisa Morales", joined: "2026-03-28", workouts: 12, status: "premium", expires: "2026-09-28", lastActive: "2026-04-07", gymId: null },
+  { id: 5, email: "chris.walker@gmail.com", name: "Chris Walker", joined: "2026-04-01", workouts: 5, status: "trial", expires: null, lastActive: "2026-04-06", gymId: 2 },
+  { id: 6, email: "ashley.nguyen@icloud.com", name: "Ashley Nguyen", joined: "2026-04-02", workouts: 3, status: "trial", expires: null, lastActive: "2026-04-04", gymId: null },
+  { id: 7, email: "derek.jones@gmail.com", name: "Derek Jones", joined: "2026-03-10", workouts: 31, status: "premium", expires: "2027-03-10", lastActive: "2026-04-07", gymId: 1 },
+  { id: 8, email: "nicole.may@gmail.com", name: "Nicole May", joined: "2026-04-05", workouts: 1, status: "trial", expires: null, lastActive: "2026-04-05", gymId: 3 },
+  { id: 9, email: "brandon.lee@yahoo.com", name: "Brandon Lee", joined: "2026-03-18", workouts: 11, status: "expired", expires: "2026-04-01", lastActive: "2026-03-30", gymId: 1 },
+  { id: 10, email: "maria.santos@gmail.com", name: "Maria Santos", joined: "2026-04-03", workouts: 7, status: "trial", expires: null, lastActive: "2026-04-07", gymId: 3 },
+  { id: 11, email: "juice@dicedfitness.com", name: "Joe (Juice)", joined: "2026-03-01", workouts: 88, status: "admin", expires: null, lastActive: "2026-04-07", gymId: null },
+];
+
+const MOCK_GYMS = [
+  {
+    id: 1, name: "Iron District Gym", location: "Astoria, Queens NY", owner: "Tony Russo",
+    ownerEmail: "tony@irondistrictgym.com", phone: "(718) 555-0142",
+    joined: "2026-03-10", plan: "premium", planExpires: "2027-03-10", monthlyFee: 49.99,
+    code: "IRON-DISTRICT", codeUses: 4,
+    equipment: [
+      { name: "Functional Trainer", qty: 3, totalSessions: 1842 },
+      { name: "Dumbbells", qty: 8, totalSessions: 1520 },
+      { name: "Barbell Rack", qty: 4, totalSessions: 980 },
+      { name: "Smith Machine", qty: 2, totalSessions: 620 },
+      { name: "Leg Press", qty: 2, totalSessions: 410 },
+    ],
+    trainers: ["Mike R.", "Sarah K."],
+    topExercises: ["Cable Crossover", "Bicep Curl", "Lat Pulldown"],
+    peakHour: "6:00 PM",
+    avgDailyUsers: 34,
+  },
+  {
+    id: 2, name: "Flex Fitness NYC", location: "Inwood, Manhattan NY", owner: "Carmen Diaz",
+    ownerEmail: "carmen@flexfitnessnyc.com", phone: "(212) 555-0198",
+    joined: "2026-03-18", plan: "basic", planExpires: "2026-09-18", monthlyFee: 29.99,
+    code: "FLEX-NYC", codeUses: 2,
+    equipment: [
+      { name: "Dumbbells", qty: 6, totalSessions: 890 },
+      { name: "Bodyweight Area", qty: 1, totalSessions: 720 },
+      { name: "Resistance Bands", qty: 10, totalSessions: 340 },
+      { name: "Kettlebells", qty: 6, totalSessions: 280 },
+    ],
+    trainers: ["Jay T."],
+    topExercises: ["Push-Ups", "Goblet Squat", "Band Pull-Apart"],
+    peakHour: "7:00 AM",
+    avgDailyUsers: 18,
+  },
+  {
+    id: 3, name: "PowerHouse BK", location: "Bay Ridge, Brooklyn NY", owner: "Marcus Johnson",
+    ownerEmail: "marcus@powerhousebk.com", phone: "(718) 555-0267",
+    joined: "2026-04-01", plan: "trial", planExpires: "2026-05-01", monthlyFee: 0,
+    code: "POWER-BK", codeUses: 2,
+    equipment: [
+      { name: "Functional Trainer", qty: 2, totalSessions: 210 },
+      { name: "Dumbbells", qty: 10, totalSessions: 185 },
+      { name: "Barbell Rack", qty: 6, totalSessions: 160 },
+      { name: "Smith Machine", qty: 1, totalSessions: 90 },
+      { name: "Kettlebells", qty: 4, totalSessions: 75 },
+      { name: "Bodyweight Area", qty: 1, totalSessions: 120 },
+    ],
+    trainers: ["Lisa M.", "Andre W."],
+    topExercises: ["Bench Press", "Deadlift", "Shoulder Press"],
+    peakHour: "5:30 PM",
+    avgDailyUsers: 12,
+  },
+];
+
+const MOCK_PROMOS = [
+  { id: 1, code: "FAMILY100", discount: 100, type: "percent", uses: 3, maxUses: 10, expires: null, active: true },
+  { id: 2, code: "FRIENDS50", discount: 50, type: "percent", uses: 7, maxUses: 20, expires: "2026-06-01", active: true },
+  { id: 3, code: "LAUNCH25", discount: 25, type: "percent", uses: 42, maxUses: 100, expires: "2026-05-01", active: true },
+  { id: 4, code: "EARLYBIRD", discount: 3, type: "dollars", uses: 15, maxUses: 50, expires: "2026-04-30", active: false },
+];
+
+const TRIAL_LIMIT = 10;
+
+// ============================================================
+// ADMIN PANEL
+// ============================================================
+export default function AdminPanel() {
+  const [activeSection, setActiveSection] = useState("overview");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedGym, setSelectedGym] = useState(null);
+  const [users, setUsers] = useState(MOCK_USERS);
+  const [gyms, setGyms] = useState(MOCK_GYMS);
+  const [promos, setPromos] = useState(MOCK_PROMOS);
+  const [showPromoForm, setShowPromoForm] = useState(false);
+  const [newPromo, setNewPromo] = useState({ code: "", discount: "", type: "percent", maxUses: "", expires: "" });
+  const [toast, setToast] = useState(null);
+
+  const stats = useMemo(() => ({
+    total: users.length,
+    trial: users.filter(u => u.status === "trial").length,
+    premium: users.filter(u => u.status === "premium").length,
+    expired: users.filter(u => u.status === "expired").length,
+    activeToday: users.filter(u => u.lastActive === "2026-04-07").length,
+    avgWorkouts: Math.round(users.reduce((a, u) => a + u.workouts, 0) / users.length),
+    aboutToConvert: users.filter(u => u.status === "trial" && u.workouts >= 7).length,
+    totalGyms: gyms.length,
+    gymRevenue: gyms.reduce((a, g) => a + g.monthlyFee, 0),
+  }), [users, gyms]);
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+
+  const togglePremium = (userId) => {
+    setUsers(prev => prev.map(u => {
+      if (u.id !== userId) return u;
+      if (u.status === "premium") return { ...u, status: "trial", expires: null };
+      const exp = new Date(); exp.setFullYear(exp.getFullYear() + 1);
+      return { ...u, status: "premium", expires: exp.toISOString().split("T")[0] };
+    }));
+    showToast("Account status updated");
+  };
+
+  const grantFreeAccess = (userId) => {
+    setUsers(prev => prev.map(u => {
+      if (u.id !== userId) return u;
+      return { ...u, status: "premium", expires: "2125-04-07" };
+    }));
+    showToast("Free lifetime access granted");
+  };
+
+  const resetTrial = (userId) => {
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, workouts: 0, status: "trial", expires: null } : u));
+    showToast("Trial reset — 10 free workouts restored");
+  };
+
+  const addPromo = () => {
+    if (!newPromo.code || !newPromo.discount) return;
+    const promo = {
+      id: Date.now(), code: newPromo.code.toUpperCase().replace(/\s/g, ""),
+      discount: Number(newPromo.discount), type: newPromo.type,
+      uses: 0, maxUses: Number(newPromo.maxUses) || 999,
+      expires: newPromo.expires || null, active: true,
+    };
+    setPromos(prev => [promo, ...prev]);
+    setNewPromo({ code: "", discount: "", type: "percent", maxUses: "", expires: "" });
+    setShowPromoForm(false);
+    showToast(`Promo code ${promo.code} created`);
+  };
+
+  const togglePromo = (id) => { setPromos(prev => prev.map(p => p.id === id ? { ...p, active: !p.active } : p)); showToast("Promo code updated"); };
+  const deletePromo = (id) => { setPromos(prev => prev.filter(p => p.id !== id)); showToast("Promo code deleted"); };
+
+  const StatusBadge = ({ status }) => {
+    const cfg = {
+      admin: { bg: "rgba(255,107,53,0.15)", color: "#FF6B35", border: "rgba(255,107,53,0.3)", label: "ADMIN" },
+      premium: { bg: "rgba(46,204,113,0.12)", color: "#2ECC71", border: "rgba(46,204,113,0.25)", label: "PREMIUM" },
+      trial: { bg: "rgba(52,152,219,0.12)", color: "#3498DB", border: "rgba(52,152,219,0.25)", label: "TRIAL" },
+      expired: { bg: "rgba(231,76,60,0.12)", color: "#E74C3C", border: "rgba(231,76,60,0.25)", label: "EXPIRED" },
+      basic: { bg: "rgba(149,165,166,0.12)", color: "#95A5A6", border: "rgba(149,165,166,0.25)", label: "BASIC" },
+    }[status] || { bg: "rgba(255,255,255,0.05)", color: "#888", border: "rgba(255,255,255,0.1)", label: status?.toUpperCase() };
+    return (
+      <span style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "1.5px", padding: "3px 10px", borderRadius: 20, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>{cfg.label}</span>
+    );
+  };
+
+  const navItems = [
+    { id: "overview", icon: "📊", label: "Overview" },
+    { id: "users", icon: "👥", label: "Users" },
+    { id: "gyms", icon: "🏢", label: "Gyms" },
+    { id: "promos", icon: "🎟️", label: "Promo Codes" },
+    { id: "activity", icon: "⚡", label: "Activity" },
+  ];
+
+  const gymMembers = (gymId) => users.filter(u => u.gymId === gymId);
+  const unlinkedUsers = users.filter(u => u.gymId === null);
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(145deg, #0a0a1a 0%, #0f0f24 50%, #0a0a1a 100%)", color: "#F0F0F0", fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif", display: "flex" }}>
+      <style>{`
+        @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        *{box-sizing:border-box}
+        ::-webkit-scrollbar{width:4px}
+        ::-webkit-scrollbar-thumb{background:rgba(255,107,53,0.3);border-radius:2px}
+        input,select{font-family:'Segoe UI',system-ui,sans-serif}
+      `}</style>
+
+      {/* SIDEBAR */}
+      <div style={{ width: 220, minHeight: "100vh", padding: "24px 16px", background: "rgba(255,255,255,0.02)", borderRight: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: "1.3rem" }}>🎲</span>
+            <span style={{ fontSize: "1.1rem", fontWeight: 900, letterSpacing: "1px", background: "linear-gradient(135deg, #FF6B35, #FF2D2D)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>DICED</span>
+          </div>
+          <div style={{ fontSize: "0.6rem", color: "#555", letterSpacing: "3px", fontWeight: 600, marginLeft: 30 }}>ADMIN PANEL</div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+          {navItems.map(item => (
+            <button key={item.id} onClick={() => { setActiveSection(item.id); setSelectedUser(null); setSelectedGym(null); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 10, padding: "11px 14px",
+                borderRadius: 10, border: "none", cursor: "pointer", textAlign: "left",
+                background: activeSection === item.id ? "rgba(255,107,53,0.1)" : "transparent",
+                color: activeSection === item.id ? "#FF6B35" : "#666",
+                fontSize: "0.82rem", fontWeight: activeSection === item.id ? 700 : 500, transition: "all 0.15s",
+              }}>
+              <span style={{ fontSize: "1rem" }}>{item.icon}</span>
+              {item.label}
+              {item.id === "gyms" && <span style={{ marginLeft: "auto", fontSize: "0.6rem", padding: "2px 6px", borderRadius: 10, background: "rgba(255,107,53,0.15)", color: "#FF6B35", fontWeight: 700 }}>{gyms.length}</span>}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ padding: "14px", borderRadius: 12, background: "rgba(255,107,53,0.06)", border: "1px solid rgba(255,107,53,0.12)", marginTop: "auto" }}>
+          <div style={{ fontSize: "0.7rem", color: "#FF6B35", fontWeight: 700, marginBottom: 4 }}>🔒 Admin Access</div>
+          <div style={{ fontSize: "0.65rem", color: "#666" }}>juice@dicedfitness.com</div>
+        </div>
+      </div>
+
+      {/* MAIN CONTENT */}
+      <div style={{ flex: 1, padding: "24px 28px", overflowY: "auto", maxHeight: "100vh" }}>
+
+        {toast && (
+          <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 1000, padding: "12px 20px", borderRadius: 12, background: "rgba(46,204,113,0.15)", border: "1px solid rgba(46,204,113,0.3)", color: "#2ECC71", fontSize: "0.8rem", fontWeight: 600, animation: "toastIn 0.3s ease", backdropFilter: "blur(10px)" }}>
+            ✓ {toast}
+          </div>
+        )}
+
+        {/* ========== OVERVIEW ========== */}
+        {activeSection === "overview" && (
+          <div style={{ animation: "fadeIn 0.4s ease" }}>
+            <h2 style={{ margin: "0 0 4px", fontSize: "1.3rem", fontWeight: 800, color: "#FFF" }}>Dashboard Overview</h2>
+            <p style={{ margin: "0 0 24px", fontSize: "0.8rem", color: "#555" }}>Real-time snapshot of your Diced Fitness platform</p>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(155px, 1fr))", gap: 12, marginBottom: 28 }}>
+              {[
+                { label: "Total Users", value: stats.total, icon: "👥", color: "#3498DB", sub: `${stats.activeToday} active today` },
+                { label: "Free Trials", value: stats.trial, icon: "🎯", color: "#F39C12", sub: `${stats.aboutToConvert} near paywall` },
+                { label: "Premium", value: stats.premium, icon: "💎", color: "#2ECC71", sub: "$" + (stats.premium * 9.99).toFixed(0) + "/mo" },
+                { label: "Partner Gyms", value: stats.totalGyms, icon: "🏢", color: "#FF6B35", sub: "$" + stats.gymRevenue.toFixed(0) + "/mo B2B" },
+                { label: "Avg Workouts", value: stats.avgWorkouts, icon: "🏋️", color: "#9B59B6", sub: "per user" },
+                { label: "Active Promos", value: promos.filter(p => p.active).length, icon: "🎟️", color: "#E67E22", sub: `${promos.reduce((a, p) => a + p.uses, 0)} total uses` },
+              ].map((kpi, i) => (
+                <div key={i} style={{
+                  background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "18px 16px",
+                  border: "1px solid rgba(255,255,255,0.06)", animation: `fadeIn 0.4s ease ${i * 0.05}s both`,
+                  cursor: "pointer", transition: "border-color 0.2s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(255,107,53,0.2)"}
+                onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"}>
+                  <span style={{ fontSize: "1.3rem" }}>{kpi.icon}</span>
+                  <div style={{ fontSize: "1.8rem", fontWeight: 900, color: kpi.color, lineHeight: 1, marginTop: 8 }}>{kpi.value}</div>
+                  <div style={{ fontSize: "0.65rem", color: "#666", letterSpacing: "1.5px", marginTop: 6, textTransform: "uppercase" }}>{kpi.label}</div>
+                  <div style={{ fontSize: "0.62rem", color: "#444", marginTop: 4 }}>{kpi.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Paywall Alert */}
+            <div style={{ background: "rgba(243,156,18,0.06)", borderRadius: 14, padding: "20px", border: "1px solid rgba(243,156,18,0.15)", marginBottom: 20 }}>
+              <h3 style={{ margin: "0 0 12px", color: "#F39C12", fontSize: "0.8rem", fontWeight: 800, letterSpacing: "1px" }}>🔥 USERS APPROACHING PAYWALL</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {users.filter(u => u.status === "trial" && u.workouts >= 7).map((u, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)" }}>
+                    <div>
+                      <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#EEE" }}>{u.name}</div>
+                      <div style={{ fontSize: "0.7rem", color: "#666" }}>{u.email}</div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: "1rem", fontWeight: 800, color: "#F39C12" }}>{u.workouts}/{TRIAL_LIMIT}</div>
+                      <div style={{ fontSize: "0.6rem", color: "#666" }}>workouts used</div>
+                    </div>
+                  </div>
+                ))}
+                {users.filter(u => u.status === "trial" && u.workouts >= 7).length === 0 && (
+                  <div style={{ fontSize: "0.8rem", color: "#555", textAlign: "center", padding: 10 }}>No users near paywall yet</div>
+                )}
+              </div>
+            </div>
+
+            {/* Recent Signups */}
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "20px", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <h3 style={{ margin: "0 0 12px", color: "#FF6B35", fontSize: "0.8rem", fontWeight: 800, letterSpacing: "1px" }}>📥 RECENT SIGNUPS</h3>
+              {users.filter(u => new Date(u.joined) >= new Date("2026-04-01")).sort((a, b) => new Date(b.joined) - new Date(a.joined)).map((u, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 8, background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${u.id * 37}, 60%, 45%), hsl(${u.id * 37 + 40}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 800, color: "#FFF" }}>{u.name.split(" ").map(n => n[0]).join("")}</div>
+                    <div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.name}</div>
+                      <div style={{ fontSize: "0.65rem", color: "#555" }}>{u.email}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <StatusBadge status={u.status} />
+                    <span style={{ fontSize: "0.65rem", color: "#555" }}>{u.joined}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========== USERS ========== */}
+        {activeSection === "users" && !selectedUser && (
+          <div style={{ animation: "fadeIn 0.4s ease" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <h2 style={{ margin: "0 0 4px", fontSize: "1.3rem", fontWeight: 800, color: "#FFF" }}>User Management</h2>
+                <p style={{ margin: 0, fontSize: "0.8rem", color: "#555" }}>{users.length} total users • {unlinkedUsers.length} independent</p>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", minWidth: 280 }}>
+                <span style={{ color: "#555" }}>🔍</span>
+                <input type="text" placeholder="Search by name or email..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                  style={{ background: "none", border: "none", outline: "none", color: "#EEE", fontSize: "0.82rem", width: "100%" }} />
+                {searchQuery && <button onClick={() => setSearchQuery("")} style={{ background: "none", border: "none", color: "#555", cursor: "pointer", fontSize: "0.9rem" }}>✕</button>}
+              </div>
+            </div>
+
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 60px", padding: "12px 18px", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                {["User", "Status", "Workouts", "Gym", "Last Active", ""].map((h, i) => (
+                  <div key={i} style={{ fontSize: "0.6rem", color: "#555", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" }}>{h}</div>
+                ))}
+              </div>
+              {(searchQuery ? users.filter(u => u.email.toLowerCase().includes(searchQuery.toLowerCase()) || u.name.toLowerCase().includes(searchQuery.toLowerCase())) : users).map((u, i) => (
+                <div key={u.id} onClick={() => setSelectedUser(u)}
+                  style={{
+                    display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 60px", padding: "14px 18px", cursor: "pointer",
+                    borderBottom: "1px solid rgba(255,255,255,0.04)", background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent",
+                    transition: "background 0.15s", animation: `slideIn 0.3s ease ${i * 0.03}s both`,
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(255,107,53,0.04)"}
+                  onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent"}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: `linear-gradient(135deg, hsl(${u.id * 37}, 60%, 45%), hsl(${u.id * 37 + 40}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 800, color: "#FFF" }}>{u.name.split(" ").map(n => n[0]).join("")}</div>
+                    <div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.name}</div>
+                      <div style={{ fontSize: "0.65rem", color: "#555" }}>{u.email}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center" }}><StatusBadge status={u.status} /></div>
+                  <div style={{ display: "flex", alignItems: "center", fontSize: "0.9rem", fontWeight: 700, color: u.status === "trial" && u.workouts >= 7 ? "#F39C12" : "#AAA" }}>
+                    {u.workouts}{u.status === "trial" ? `/${TRIAL_LIMIT}` : ""}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", fontSize: "0.72rem", color: "#666" }}>
+                    {u.gymId ? gyms.find(g => g.id === u.gymId)?.name?.split(" ")[0] || "—" : "—"}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", fontSize: "0.72rem", color: "#666" }}>{u.lastActive}</div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", fontSize: "0.8rem", color: "#444" }}>→</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========== USER DETAIL ========== */}
+        {activeSection === "users" && selectedUser && (
+          <div style={{ animation: "fadeIn 0.3s ease" }}>
+            <button onClick={() => setSelectedUser(null)} style={{ padding: "7px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#999", cursor: "pointer", fontSize: "0.75rem", marginBottom: 20 }}>← Back to Users</button>
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "28px", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, marginBottom: 24 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${selectedUser.id * 37}, 60%, 45%), hsl(${selectedUser.id * 37 + 40}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", fontWeight: 800, color: "#FFF" }}>{selectedUser.name.split(" ").map(n => n[0]).join("")}</div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#FFF" }}>{selectedUser.name}</h2>
+                    <p style={{ margin: "2px 0 0", fontSize: "0.82rem", color: "#666" }}>{selectedUser.email}</p>
+                    {selectedUser.gymId && <p style={{ margin: "2px 0 0", fontSize: "0.72rem", color: "#FF6B35" }}>🏢 {gyms.find(g => g.id === selectedUser.gymId)?.name}</p>}
+                  </div>
+                </div>
+                <StatusBadge status={selectedUser.status} />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12, marginBottom: 24 }}>
+                {[
+                  { label: "Joined", value: selectedUser.joined, color: "#3498DB" },
+                  { label: "Workouts", value: selectedUser.workouts, color: "#FF6B35" },
+                  { label: "Last Active", value: selectedUser.lastActive, color: "#2ECC71" },
+                  { label: "Expires", value: selectedUser.expires || "N/A", color: "#9B59B6" },
+                ].map((s, i) => (
+                  <div key={i} style={{ padding: "14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div style={{ fontSize: "1rem", fontWeight: 800, color: s.color }}>{s.value}</div>
+                    <div style={{ fontSize: "0.6rem", color: "#555", letterSpacing: "1.5px", marginTop: 4, textTransform: "uppercase" }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {(selectedUser.status === "trial" || selectedUser.status === "expired") && (
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                    <span style={{ fontSize: "0.72rem", color: "#888", fontWeight: 600 }}>Trial Progress</span>
+                    <span style={{ fontSize: "0.72rem", color: selectedUser.workouts >= TRIAL_LIMIT ? "#E74C3C" : "#F39C12", fontWeight: 700 }}>{selectedUser.workouts}/{TRIAL_LIMIT}</span>
+                  </div>
+                  <div style={{ height: 8, borderRadius: 4, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                    <div style={{ width: `${Math.min((selectedUser.workouts / TRIAL_LIMIT) * 100, 100)}%`, height: "100%", borderRadius: 4, background: selectedUser.workouts >= TRIAL_LIMIT ? "linear-gradient(90deg, #E74C3C, #C0392B)" : "linear-gradient(90deg, #FF6B35, #FF2D2D)" }} />
+                  </div>
+                </div>
+              )}
+
+              {selectedUser.status !== "admin" && (
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <button onClick={() => { togglePremium(selectedUser.id); setSelectedUser(prev => ({ ...prev, status: prev.status === "premium" ? "trial" : "premium" })); }}
+                    style={{ padding: "10px 20px", borderRadius: 10, border: "none", cursor: "pointer", background: selectedUser.status === "premium" ? "rgba(231,76,60,0.15)" : "linear-gradient(135deg, #2ECC71, #27AE60)", color: selectedUser.status === "premium" ? "#E74C3C" : "#FFF", fontSize: "0.78rem", fontWeight: 700 }}>
+                    {selectedUser.status === "premium" ? "⬇ Downgrade" : "⬆ Upgrade to Premium"}
+                  </button>
+                  <button onClick={() => { grantFreeAccess(selectedUser.id); setSelectedUser(prev => ({ ...prev, status: "premium", expires: "2125-04-07" })); }}
+                    style={{ padding: "10px 20px", borderRadius: 10, cursor: "pointer", background: "rgba(255,107,53,0.1)", border: "1px solid rgba(255,107,53,0.25)", color: "#FF6B35", fontSize: "0.78rem", fontWeight: 700 }}>
+                    🎁 Free Lifetime
+                  </button>
+                  <button onClick={() => { resetTrial(selectedUser.id); setSelectedUser(prev => ({ ...prev, workouts: 0, status: "trial" })); }}
+                    style={{ padding: "10px 20px", borderRadius: 10, cursor: "pointer", background: "rgba(52,152,219,0.1)", border: "1px solid rgba(52,152,219,0.25)", color: "#3498DB", fontSize: "0.78rem", fontWeight: 700 }}>
+                    🔄 Reset Trial
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ========== GYMS ========== */}
+        {activeSection === "gyms" && !selectedGym && (
+          <div style={{ animation: "fadeIn 0.4s ease" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <h2 style={{ margin: "0 0 4px", fontSize: "1.3rem", fontWeight: 800, color: "#FFF" }}>Partner Gyms</h2>
+                <p style={{ margin: 0, fontSize: "0.8rem", color: "#555" }}>{gyms.length} gyms • ${stats.gymRevenue.toFixed(0)}/mo B2B revenue</p>
+              </div>
+            </div>
+
+            {/* Gym KPIs */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(155px, 1fr))", gap: 12, marginBottom: 24 }}>
+              {[
+                { label: "Total Gyms", value: gyms.length, icon: "🏢", color: "#FF6B35" },
+                { label: "B2B Revenue", value: "$" + stats.gymRevenue.toFixed(0), icon: "💰", color: "#2ECC71" },
+                { label: "Gym Members", value: users.filter(u => u.gymId !== null).length, icon: "👥", color: "#3498DB" },
+                { label: "Total Equipment", value: gyms.reduce((a, g) => a + g.equipment.reduce((b, e) => b + e.qty, 0), 0), icon: "🏋️", color: "#9B59B6" },
+              ].map((kpi, i) => (
+                <div key={i} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "18px 16px", border: "1px solid rgba(255,255,255,0.06)", animation: `fadeIn 0.4s ease ${i * 0.05}s both` }}>
+                  <span style={{ fontSize: "1.2rem" }}>{kpi.icon}</span>
+                  <div style={{ fontSize: "1.6rem", fontWeight: 900, color: kpi.color, lineHeight: 1, marginTop: 8 }}>{kpi.value}</div>
+                  <div style={{ fontSize: "0.65rem", color: "#666", letterSpacing: "1.5px", marginTop: 6, textTransform: "uppercase" }}>{kpi.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Gym Cards */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {gyms.map((gym, i) => (
+                <div key={gym.id} onClick={() => setSelectedGym(gym)}
+                  style={{
+                    background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "22px",
+                    border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer",
+                    transition: "border-color 0.2s, transform 0.2s",
+                    animation: `slideIn 0.3s ease ${i * 0.08}s both`,
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,107,53,0.25)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                        <span style={{ fontSize: "1.2rem" }}>🏢</span>
+                        <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 800, color: "#FFF" }}>{gym.name}</h3>
+                        <StatusBadge status={gym.plan} />
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "#666", marginLeft: 30 }}>📍 {gym.location} • Owner: {gym.owner}</div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "#2ECC71" }}>${gym.monthlyFee}<span style={{ fontSize: "0.6rem", color: "#666" }}>/mo</span></div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 10 }}>
+                    {[
+                      { label: "Members", value: gymMembers(gym.id).length, color: "#3498DB" },
+                      { label: "Equipment", value: gym.equipment.length + " types", color: "#FF6B35" },
+                      { label: "Trainers", value: gym.trainers.length, color: "#9B59B6" },
+                      { label: "Avg Daily", value: gym.avgDailyUsers, color: "#2ECC71" },
+                      { label: "Peak Hour", value: gym.peakHour, color: "#F39C12" },
+                      { label: "Gym Code", value: gym.code, color: "#E67E22" },
+                    ].map((s, j) => (
+                      <div key={j} style={{ padding: "10px", borderRadius: 8, background: "rgba(255,255,255,0.03)" }}>
+                        <div style={{ fontSize: "0.9rem", fontWeight: 700, color: s.color }}>{s.value}</div>
+                        <div style={{ fontSize: "0.55rem", color: "#555", letterSpacing: "1px", marginTop: 2, textTransform: "uppercase" }}>{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========== GYM DETAIL ========== */}
+        {activeSection === "gyms" && selectedGym && (
+          <div style={{ animation: "fadeIn 0.3s ease" }}>
+            <button onClick={() => setSelectedGym(null)} style={{ padding: "7px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#999", cursor: "pointer", fontSize: "0.75rem", marginBottom: 20 }}>← Back to Gyms</button>
+
+            {/* Gym Header */}
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "28px", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                    <span style={{ fontSize: "1.5rem" }}>🏢</span>
+                    <h2 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 800, color: "#FFF" }}>{selectedGym.name}</h2>
+                    <StatusBadge status={selectedGym.plan} />
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "#666", marginLeft: 34 }}>📍 {selectedGym.location}</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#2ECC71" }}>${selectedGym.monthlyFee}<span style={{ fontSize: "0.7rem", color: "#666" }}>/mo</span></div>
+                  <div style={{ fontSize: "0.65rem", color: "#555" }}>Since {selectedGym.joined}</div>
+                </div>
+              </div>
+
+              {/* Owner Info */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 20 }}>
+                <div style={{ padding: "14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ fontSize: "0.6rem", color: "#555", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 4 }}>Owner</div>
+                  <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#EEE" }}>{selectedGym.owner}</div>
+                  <div style={{ fontSize: "0.72rem", color: "#666", marginTop: 2 }}>{selectedGym.ownerEmail}</div>
+                  <div style={{ fontSize: "0.72rem", color: "#666" }}>{selectedGym.phone}</div>
+                </div>
+                <div style={{ padding: "14px", borderRadius: 10, background: "rgba(255,107,53,0.06)", border: "1px solid rgba(255,107,53,0.15)" }}>
+                  <div style={{ fontSize: "0.6rem", color: "#FF6B35", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 4 }}>Gym Signup Code</div>
+                  <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "#FF6B35", fontFamily: "'Courier New', monospace", letterSpacing: "2px" }}>{selectedGym.code}</div>
+                  <div style={{ fontSize: "0.65rem", color: "#666", marginTop: 4 }}>Used {selectedGym.codeUses} times</div>
+                </div>
+                <div style={{ padding: "14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ fontSize: "0.6rem", color: "#555", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 4 }}>Plan</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <StatusBadge status={selectedGym.plan} />
+                  </div>
+                  <div style={{ fontSize: "0.72rem", color: "#666", marginTop: 6 }}>Expires: {selectedGym.planExpires}</div>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 10 }}>
+                {[
+                  { label: "Members", value: gymMembers(selectedGym.id).length, color: "#3498DB" },
+                  { label: "Trainers", value: selectedGym.trainers.length, color: "#9B59B6" },
+                  { label: "Avg Daily Users", value: selectedGym.avgDailyUsers, color: "#2ECC71" },
+                  { label: "Peak Hour", value: selectedGym.peakHour, color: "#F39C12" },
+                  { label: "Equipment Types", value: selectedGym.equipment.length, color: "#FF6B35" },
+                  { label: "Total Sessions", value: selectedGym.equipment.reduce((a, e) => a + e.totalSessions, 0).toLocaleString(), color: "#E74C3C" },
+                ].map((s, i) => (
+                  <div key={i} style={{ padding: "12px", borderRadius: 10, background: "rgba(255,255,255,0.03)", textAlign: "center" }}>
+                    <div style={{ fontSize: "1.1rem", fontWeight: 800, color: s.color }}>{s.value}</div>
+                    <div style={{ fontSize: "0.55rem", color: "#555", letterSpacing: "1px", marginTop: 2, textTransform: "uppercase" }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Equipment Analytics */}
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "24px", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 20 }}>
+              <h3 style={{ margin: "0 0 16px", color: "#FF6B35", fontSize: "0.8rem", fontWeight: 800, letterSpacing: "1px" }}>🏋️ EQUIPMENT ANALYTICS</h3>
+              {selectedGym.equipment.sort((a, b) => b.totalSessions - a.totalSessions).map((eq, i) => {
+                const maxSessions = Math.max(...selectedGym.equipment.map(e => e.totalSessions));
+                const colors = ["#FF6B35", "#FF2D2D", "#3498DB", "#2ECC71", "#9B59B6", "#F39C12"];
+                return (
+                  <div key={i} style={{ marginBottom: 14, animation: `slideIn 0.3s ease ${i * 0.06}s both` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ fontSize: "1.1rem", fontWeight: 900, color: colors[i % colors.length], minWidth: 24 }}>#{i + 1}</span>
+                        <div>
+                          <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#EEE" }}>{eq.name}</div>
+                          <div style={{ fontSize: "0.65rem", color: "#555" }}>{eq.qty} units • {eq.totalSessions.toLocaleString()} sessions</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: "0.8rem", fontWeight: 800, color: colors[i % colors.length] }}>
+                        {Math.round((eq.totalSessions / selectedGym.equipment.reduce((a, e) => a + e.totalSessions, 0)) * 100)}%
+                      </div>
+                    </div>
+                    <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                      <div style={{ width: `${(eq.totalSessions / maxSessions) * 100}%`, height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${colors[i % colors.length]}, ${colors[i % colors.length]}88)`, transition: "width 0.8s" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Gym Members */}
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "24px", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 20 }}>
+              <h3 style={{ margin: "0 0 16px", color: "#3498DB", fontSize: "0.8rem", fontWeight: 800, letterSpacing: "1px" }}>👥 GYM MEMBERS ({gymMembers(selectedGym.id).length})</h3>
+              {gymMembers(selectedGym.id).map((u, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 8, background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${u.id * 37}, 60%, 45%), hsl(${u.id * 37 + 40}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 800, color: "#FFF" }}>{u.name.split(" ").map(n => n[0]).join("")}</div>
+                    <div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.name}</div>
+                      <div style={{ fontSize: "0.65rem", color: "#555" }}>{u.email}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: "0.75rem", color: "#888" }}>{u.workouts} workouts</span>
+                    <StatusBadge status={u.status} />
+                  </div>
+                </div>
+              ))}
+              {gymMembers(selectedGym.id).length === 0 && (
+                <div style={{ padding: 20, textAlign: "center", color: "#555", fontSize: "0.85rem" }}>No members linked yet</div>
+              )}
+            </div>
+
+            {/* Trainers */}
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "24px", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <h3 style={{ margin: "0 0 16px", color: "#9B59B6", fontSize: "0.8rem", fontWeight: 800, letterSpacing: "1px" }}>🏅 TRAINERS ({selectedGym.trainers.length})</h3>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {selectedGym.trainers.map((t, i) => (
+                  <div key={i} style={{ padding: "12px 18px", borderRadius: 10, background: "rgba(155,89,182,0.08)", border: "1px solid rgba(155,89,182,0.2)", fontSize: "0.85rem", fontWeight: 600, color: "#CCC" }}>
+                    👤 {t}
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 14 }}>
+                <div style={{ fontSize: "0.7rem", color: "#666" }}>Top Exercises at this gym:</div>
+                <div style={{ display: "flex", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
+                  {selectedGym.topExercises.map((ex, i) => (
+                    <span key={i} style={{ padding: "4px 12px", borderRadius: 20, background: "rgba(255,107,53,0.08)", border: "1px solid rgba(255,107,53,0.15)", fontSize: "0.72rem", color: "#FF6B35" }}>{ex}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========== PROMO CODES ========== */}
+        {activeSection === "promos" && (
+          <div style={{ animation: "fadeIn 0.4s ease" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <h2 style={{ margin: "0 0 4px", fontSize: "1.3rem", fontWeight: 800, color: "#FFF" }}>Promo Codes</h2>
+                <p style={{ margin: 0, fontSize: "0.8rem", color: "#555" }}>Create and manage discount codes</p>
+              </div>
+              <button onClick={() => setShowPromoForm(!showPromoForm)}
+                style={{ padding: "10px 20px", borderRadius: 10, border: "none", cursor: "pointer", background: "linear-gradient(135deg, #FF6B35, #FF2D2D)", color: "#FFF", fontSize: "0.78rem", fontWeight: 700 }}>
+                {showPromoForm ? "✕ Cancel" : "+ New Promo Code"}
+              </button>
+            </div>
+
+            {showPromoForm && (
+              <div style={{ background: "rgba(255,107,53,0.05)", borderRadius: 14, padding: "24px", border: "1px solid rgba(255,107,53,0.15)", marginBottom: 20, animation: "fadeIn 0.3s ease" }}>
+                <h3 style={{ margin: "0 0 16px", color: "#FF6B35", fontSize: "0.85rem", fontWeight: 800 }}>Create Promo Code</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+                  {[
+                    { label: "Code", value: newPromo.code, key: "code", placeholder: "e.g. FAMILY100", type: "text", extra: { textTransform: "uppercase" } },
+                    { label: "Max Uses", value: newPromo.maxUses, key: "maxUses", placeholder: "Unlimited", type: "number" },
+                  ].map((f, i) => (
+                    <div key={i}>
+                      <label style={{ display: "block", fontSize: "0.65rem", color: "#888", marginBottom: 4, letterSpacing: "1px", textTransform: "uppercase" }}>{f.label}</label>
+                      <input value={f.value} onChange={e => setNewPromo(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} type={f.type}
+                        style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#FFF", fontSize: "0.85rem", outline: "none", ...f.extra }} />
+                    </div>
+                  ))}
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.65rem", color: "#888", marginBottom: 4, letterSpacing: "1px", textTransform: "uppercase" }}>Discount</label>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <input value={newPromo.discount} onChange={e => setNewPromo(p => ({ ...p, discount: e.target.value }))} placeholder="50" type="number"
+                        style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#FFF", fontSize: "0.85rem", outline: "none" }} />
+                      <select value={newPromo.type} onChange={e => setNewPromo(p => ({ ...p, type: e.target.value }))}
+                        style={{ padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.08)", color: "#FFF", fontSize: "0.8rem", outline: "none", cursor: "pointer" }}>
+                        <option value="percent">%</option>
+                        <option value="dollars">$</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.65rem", color: "#888", marginBottom: 4, letterSpacing: "1px", textTransform: "uppercase" }}>Expires</label>
+                    <input value={newPromo.expires} onChange={e => setNewPromo(p => ({ ...p, expires: e.target.value }))} type="date"
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#FFF", fontSize: "0.85rem", outline: "none", colorScheme: "dark" }} />
+                  </div>
+                </div>
+                <button onClick={addPromo} style={{ marginTop: 16, padding: "10px 24px", borderRadius: 10, border: "none", cursor: "pointer", background: "linear-gradient(135deg, #2ECC71, #27AE60)", color: "#FFF", fontSize: "0.78rem", fontWeight: 700 }}>✓ Create Promo Code</button>
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {promos.map((p, i) => (
+                <div key={p.id} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "20px", border: `1px solid ${p.active ? "rgba(255,255,255,0.06)" : "rgba(231,76,60,0.15)"}`, opacity: p.active ? 1 : 0.6, animation: `slideIn 0.3s ease ${i * 0.05}s both` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                        <span style={{ fontSize: "1.1rem", fontWeight: 900, color: "#FF6B35", fontFamily: "'Courier New', monospace", letterSpacing: "2px" }}>{p.code}</span>
+                        <span style={{ fontSize: "0.6rem", padding: "2px 8px", borderRadius: 20, fontWeight: 700, background: p.active ? "rgba(46,204,113,0.12)" : "rgba(231,76,60,0.12)", color: p.active ? "#2ECC71" : "#E74C3C", border: `1px solid ${p.active ? "rgba(46,204,113,0.25)" : "rgba(231,76,60,0.25)"}` }}>{p.active ? "ACTIVE" : "DISABLED"}</span>
+                      </div>
+                      <div style={{ fontSize: "0.8rem", color: "#AAA" }}>{p.type === "percent" ? `${p.discount}% off` : `$${p.discount} off`} • Used {p.uses}/{p.maxUses}{p.expires ? ` • Expires ${p.expires}` : " • No expiry"}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => togglePromo(p.id)} style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", background: p.active ? "rgba(231,76,60,0.1)" : "rgba(46,204,113,0.1)", border: `1px solid ${p.active ? "rgba(231,76,60,0.25)" : "rgba(46,204,113,0.25)"}`, color: p.active ? "#E74C3C" : "#2ECC71", fontSize: "0.7rem", fontWeight: 700 }}>{p.active ? "Disable" : "Enable"}</button>
+                      <button onClick={() => deletePromo(p.id)} style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "#666", fontSize: "0.7rem", fontWeight: 600 }}>🗑</button>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: 12, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                    <div style={{ width: `${(p.uses / p.maxUses) * 100}%`, height: "100%", borderRadius: 2, background: p.uses / p.maxUses > 0.8 ? "linear-gradient(90deg, #E74C3C, #C0392B)" : "linear-gradient(90deg, #FF6B35, #FF2D2D)" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========== ACTIVITY ========== */}
+        {activeSection === "activity" && (
+          <div style={{ animation: "fadeIn 0.4s ease" }}>
+            <h2 style={{ margin: "0 0 4px", fontSize: "1.3rem", fontWeight: 800, color: "#FFF" }}>Recent Activity</h2>
+            <p style={{ margin: "0 0 24px", fontSize: "0.8rem", color: "#555" }}>Latest events across the platform</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {[
+                { time: "2 min ago", event: "Workout completed", user: "Maria Santos", detail: "12 rolls • Chest & Arms • PowerHouse BK", icon: "🎲", color: "#FF6B35" },
+                { time: "18 min ago", event: "New signup", user: "Nicole May", detail: "Used gym code POWER-BK", icon: "📥", color: "#2ECC71" },
+                { time: "34 min ago", event: "Premium upgrade", user: "Lisa Morales", detail: "Yearly plan • $99.99 (independent user)", icon: "💎", color: "#9B59B6" },
+                { time: "1 hr ago", event: "Gym joined", user: "PowerHouse BK", detail: "New gym partner • Bay Ridge, Brooklyn", icon: "🏢", color: "#FF6B35" },
+                { time: "1 hr ago", event: "Promo code used", user: "Chris Walker", detail: "LAUNCH25 — 25% off • via Flex Fitness NYC", icon: "🎟️", color: "#F39C12" },
+                { time: "2 hrs ago", event: "Workout completed", user: "Derek Jones", detail: "20 rolls • Full Body • Iron District Gym", icon: "🎲", color: "#FF6B35" },
+                { time: "2 hrs ago", event: "Trial near limit", user: "Jay Thompson", detail: "9/10 workouts used • Flex Fitness NYC member", icon: "⚠️", color: "#E74C3C" },
+                { time: "3 hrs ago", event: "PR achieved", user: "Mike Rivera", detail: "Bench Press — 225 lbs • Iron District Gym", icon: "🏆", color: "#F39C12" },
+                { time: "4 hrs ago", event: "Equipment updated", user: "Iron District Gym", detail: "Added 2x Kettlebells to inventory", icon: "🏋️", color: "#3498DB" },
+                { time: "5 hrs ago", event: "Monthly report sent", user: "System", detail: "March report emailed to all gym partners", icon: "📧", color: "#2ECC71" },
+              ].map((a, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 10, background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent", animation: `slideIn 0.3s ease ${i * 0.03}s both` }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: `${a.color}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}>{a.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{a.event} <span style={{ color: a.color, fontWeight: 700 }}>• {a.user}</span></div>
+                    <div style={{ fontSize: "0.7rem", color: "#555", marginTop: 1 }}>{a.detail}</div>
+                  </div>
+                  <div style={{ fontSize: "0.65rem", color: "#444", whiteSpace: "nowrap" }}>{a.time}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

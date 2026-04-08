@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DICED FITNESS — Admin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --fire: #FF6B35;
+  --blood: #FF2D2D;
+  --dark: #0a0a1a;
+  --card: #111128;
+  --border: rgba(255,107,53,0.12);
+  --text: #e0e0e0;
+  --muted: #666;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--dark);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+
+/* ---------- Auth gate ---------- */
+.gate{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:radial-gradient(ellipse at top, rgba(255,107,53,0.08), transparent 60%), var(--dark);
+}
+.gate-card{
+  width:100%;
+  max-width:420px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:40px 32px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.brand{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:42px;
+  letter-spacing:2px;
+  text-align:center;
+  background:linear-gradient(135deg,var(--fire),var(--blood));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  margin-bottom:4px;
+}
+.brand-sub{
+  text-align:center;
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  color:var(--muted);
+  letter-spacing:2px;
+  text-transform:uppercase;
+  margin-bottom:32px;
+}
+.gate h2{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px;
+  letter-spacing:1px;
+  margin-bottom:24px;
+  color:#fff;
+}
+.field{margin-bottom:16px}
+.field label{
+  display:block;
+  font-size:11px;
+  font-family:'DM Mono',monospace;
+  text-transform:uppercase;
+  letter-spacing:1.2px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+.field input{
+  width:100%;
+  background:#0a0a1a;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:12px 14px;
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;
+  transition:border-color .15s;
+}
+.field input:focus{
+  outline:none;
+  border-color:var(--fire);
+}
+.btn{
+  width:100%;
+  background:linear-gradient(135deg,var(--fire),var(--blood));
+  color:#fff;
+  border:none;
+  padding:13px;
+  border-radius:8px;
+  font-family:'DM Sans',sans-serif;
+  font-weight:700;
+  font-size:14px;
+  letter-spacing:0.5px;
+  cursor:pointer;
+  text-transform:uppercase;
+  transition:transform .1s, box-shadow .15s;
+  margin-top:8px;
+}
+.btn:hover{box-shadow:0 8px 24px rgba(255,107,53,0.3)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn-link{
+  background:none;
+  border:none;
+  color:var(--fire);
+  font-family:'DM Mono',monospace;
+  font-size:12px;
+  cursor:pointer;
+  text-decoration:none;
+  padding:0;
+}
+.btn-link:hover{color:var(--blood)}
+.row-between{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:14px;
+}
+.msg{
+  padding:12px;
+  border-radius:8px;
+  font-size:13px;
+  margin-bottom:16px;
+  font-family:'DM Mono',monospace;
+}
+.msg-error{
+  background:rgba(255,45,45,0.1);
+  border:1px solid rgba(255,45,45,0.3);
+  color:#ff8080;
+}
+.msg-ok{
+  background:rgba(76,175,80,0.1);
+  border:1px solid rgba(76,175,80,0.3);
+  color:#7ed87e;
+}
+.center{text-align:center}
+.loading{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  font-family:'DM Mono',monospace;
+  color:var(--muted);
+  letter-spacing:2px;
+  text-transform:uppercase;
+  font-size:12px;
+}
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 24px;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.topbar .who{
+  font-family:'DM Mono',monospace;
+  font-size:12px;
+  color:var(--muted);
+}
+.topbar .who strong{color:var(--text)}
+</style>
+</head>
+<body>
+<div id="root"><div class="loading">Loading...</div></div>
+
+<!-- React + Babel for in-browser JSX (admin panel reuses existing JSX file) -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<!-- Firebase Web SDK (separate from RN firebase.js used by the mobile app) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getAuth, signInWithEmailAndPassword, sendPasswordResetEmail,
+    onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAO2JgrM56buPxY2cq-qo4tKjczcPEPwtU",
+    authDomain: "diced-dcd86.firebaseapp.com",
+    projectId: "diced-dcd86",
+    storageBucket: "diced-dcd86.firebasestorage.app",
+    messagingSenderId: "1002578846450",
+    appId: "1:1002578846450:web:774257db4c5fd9df03e66b",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Expose to the non-module Babel script below
+  window.__firebase = {
+    auth, db,
+    signInWithEmailAndPassword, sendPasswordResetEmail,
+    onAuthStateChanged, signOut, doc, getDoc,
+  };
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<!-- Existing admin panel JSX: fetched, rewritten to use window.React, and transformed -->
+<script>
+  window.__loadAdminPanel = async function () {
+    const res = await fetch("./admin_panel_v2.jsx");
+    if (!res.ok) throw new Error("Failed to load admin_panel_v2.jsx");
+    let src = await res.text();
+    // Strip ESM bits and bind to globals already on window (React, useState, useMemo)
+    src = src.replace(/^\s*import\s+\{([^}]+)\}\s+from\s+["']react["'];?\s*$/m,
+      (_, names) => `const {${names}} = React;`);
+    src = src.replace(/export\s+default\s+function\s+AdminPanel/, "function AdminPanel");
+    src += "\n;window.AdminPanel = AdminPanel;";
+    const out = Babel.transform(src, { presets: ["env", "react"] }).code;
+    // eslint-disable-next-line no-new-func
+    new Function(out)();
+  };
+</script>
+
+<!-- Auth gate + RBAC + mount -->
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect } = React;
+
+function LoginPage({ onError }) {
+  const [mode, setMode] = useState("login"); // login | forgot
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const fb = window.__firebase;
+
+  const friendly = (code) => {
+    const m = {
+      "auth/invalid-email": "That doesn't look like a valid email.",
+      "auth/user-not-found": "No account found for that email.",
+      "auth/wrong-password": "Incorrect password.",
+      "auth/invalid-credential": "Incorrect email or password.",
+      "auth/too-many-requests": "Too many attempts. Try again in a bit.",
+      "auth/network-request-failed": "Network error. Check your connection.",
+    };
+    return m[code] || "Something went wrong. Please try again.";
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError(""); setInfo(""); setBusy(true);
+    try {
+      await fb.signInWithEmailAndPassword(fb.auth, email.trim(), password);
+      // onAuthStateChanged will take over
+    } catch (err) {
+      setError(friendly(err.code));
+      setBusy(false);
+    }
+  };
+
+  const handleReset = async (e) => {
+    e.preventDefault();
+    setError(""); setInfo(""); setBusy(true);
+    try {
+      await fb.sendPasswordResetEmail(fb.auth, email.trim());
+      setInfo("Password reset email sent. Check your inbox.");
+    } catch (err) {
+      setError(friendly(err.code));
+    }
+    setBusy(false);
+  };
+
+  return (
+    <div className="gate">
+      <div className="gate-card">
+        <div className="brand">DICED</div>
+        <div className="brand-sub">Admin Dashboard</div>
+        <h2>{mode === "login" ? "Sign In" : "Reset Password"}</h2>
+
+        {error && <div className="msg msg-error">{error}</div>}
+        {info && <div className="msg msg-ok">{info}</div>}
+
+        <form onSubmit={mode === "login" ? handleLogin : handleReset}>
+          <div className="field">
+            <label>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+          </div>
+
+          {mode === "login" && (
+            <div className="field">
+              <label>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
+            </div>
+          )}
+
+          <button className="btn" type="submit" disabled={busy}>
+            {busy ? "..." : (mode === "login" ? "Sign In" : "Send Reset Link")}
+          </button>
+        </form>
+
+        <div className="row-between">
+          {mode === "login" ? (
+            <button className="btn-link" onClick={() => { setMode("forgot"); setError(""); setInfo(""); }}>
+              Forgot password?
+            </button>
+          ) : (
+            <button className="btn-link" onClick={() => { setMode("login"); setError(""); setInfo(""); }}>
+              ← Back to sign in
+            </button>
+          )}
+          <a className="btn-link" href="/">← Home</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AccessDenied({ email, onSignOut }) {
+  return (
+    <div className="gate">
+      <div className="gate-card">
+        <div className="brand">DICED</div>
+        <div className="brand-sub">Admin Dashboard</div>
+        <h2>Access Denied</h2>
+        <div className="msg msg-error">
+          The account <strong>{email}</strong> does not have admin privileges.
+        </div>
+        <button className="btn" onClick={onSignOut}>Sign Out</button>
+      </div>
+    </div>
+  );
+}
+
+function Gate() {
+  const [state, setState] = useState({ status: "loading" });
+  // status: loading | signed-out | checking | denied | admin
+
+  useEffect(() => {
+    const fb = window.__firebase;
+    const unsub = fb.onAuthStateChanged(fb.auth, async (user) => {
+      if (!user) {
+        setState({ status: "signed-out" });
+        return;
+      }
+      setState({ status: "checking", user });
+      try {
+        const snap = await fb.getDoc(fb.doc(fb.db, "users", user.uid));
+        const role = snap.exists() ? snap.data().role : null;
+        if (role === "admin") {
+          setState({ status: "admin", user });
+        } else {
+          setState({ status: "denied", user });
+        }
+      } catch (err) {
+        console.error("Role check failed:", err);
+        setState({ status: "denied", user });
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const handleSignOut = async () => {
+    const fb = window.__firebase;
+    await fb.signOut(fb.auth);
+  };
+
+  if (state.status === "loading" || state.status === "checking") {
+    return <div className="loading">Verifying access...</div>;
+  }
+  if (state.status === "signed-out") {
+    return <LoginPage />;
+  }
+  if (state.status === "denied") {
+    return <AccessDenied email={state.user.email} onSignOut={handleSignOut} />;
+  }
+  // admin
+  const AdminPanel = window.AdminPanel;
+  if (!AdminPanel) {
+    return <div className="loading">Loading admin panel...</div>;
+  }
+  return (
+    <div>
+      <div className="topbar">
+        <div className="brand" style={{ fontSize: 22, margin: 0 }}>DICED ADMIN</div>
+        <div className="who">
+          Signed in as <strong>{state.user.email}</strong>
+          {" · "}
+          <button className="btn-link" onClick={handleSignOut}>Sign Out</button>
+        </div>
+      </div>
+      <AdminPanel />
+    </div>
+  );
+}
+
+async function boot() {
+  // Wait for the firebase ESM module to be ready
+  while (!window.__firebase) {
+    await new Promise((r) => setTimeout(r, 30));
+  }
+  // Load + transform the admin panel JSX into window.AdminPanel
+  try {
+    await window.__loadAdminPanel();
+  } catch (err) {
+    console.error(err);
+    document.getElementById("root").innerHTML =
+      '<div class="loading">Failed to load admin panel.</div>';
+    return;
+  }
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(<Gate />);
+}
+boot();
+</script>
+</body>
+</html>

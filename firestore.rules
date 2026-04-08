@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ---------- User role docs ----------
+    // Each user has a doc at users/{uid} with at minimum { role: 'admin' | 'user' }.
+    // Users can read their own doc (needed by the dashboard RBAC check).
+    // Roles are managed from the Firebase Console — never writable from clients.
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if false;
+    }
+
+    // ---------- Admin-only collections ----------
+    // Anything the admin panel manages should live under collections only admins can touch.
+    match /gyms/{gymId} {
+      allow read, write: if isAdmin();
+    }
+    match /promos/{promoId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ---------- Default deny ----------
+    // Anything not explicitly matched above is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
