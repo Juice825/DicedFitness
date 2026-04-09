@@ -194,7 +194,10 @@ body{
     getAuth, signInWithEmailAndPassword, sendPasswordResetEmail,
     onAuthStateChanged, signOut
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import {
+    getFirestore, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+    collection, collectionGroup, query, orderBy, limit, serverTimestamp, increment,
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAO2JgrM56buPxY2cq-qo4tKjczcPEPwtU",
@@ -213,7 +216,9 @@ body{
   window.__firebase = {
     auth, db,
     signInWithEmailAndPassword, sendPasswordResetEmail,
-    onAuthStateChanged, signOut, doc, getDoc,
+    onAuthStateChanged, signOut,
+    doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+    collection, collectionGroup, query, orderBy, limit, serverTimestamp, increment,
   };
   window.dispatchEvent(new Event('firebase-ready'));
 </script>
@@ -221,22 +226,24 @@ body{
 <!-- Existing admin panel JSX: fetched, rewritten to use window.React, and transformed -->
 <script>
   window.__loadAdminPanel = async function () {
-    const res = await fetch("./admin_panel_v2.jsx");
+    const res = await fetch("./admin_panel_v2.jsx?v=" + Date.now());
     if (!res.ok) throw new Error("Failed to load admin_panel_v2.jsx");
     let src = await res.text();
-    // Strip ESM bits and bind to globals already on window (React, useState, useMemo)
+    // Strip ESM bits and bind to globals already on window (React, Firebase)
     src = src.replace(/^\s*import\s+\{([^}]+)\}\s+from\s+["']react["'];?\s*$/m,
       (_, names) => `const {${names}} = React;`);
+    // Strip all other import lines (firebase-web, firebase/auth, firebase/firestore, etc.)
+    src = src.replace(/^\s*import\s+.*from\s+["'](?!react["']).+["'];?\s*$/gm, '');
     src = src.replace(/export\s+default\s+function\s+AdminPanel/, "function AdminPanel");
     src += "\n;window.AdminPanel = AdminPanel;";
-    const out = Babel.transform(src, { presets: ["env", "react"] }).code;
+    const out = Babel.transform(src, { presets: ["react"] }).code;
     // eslint-disable-next-line no-new-func
     new Function(out)();
   };
 </script>
 
 <!-- Auth gate + RBAC + mount -->
-<script type="text/babel" data-presets="env,react">
+<script type="text/babel" data-presets="react">
 const { useState, useEffect } = React;
 
 function LoginPage({ onError }) {

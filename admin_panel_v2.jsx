@@ -1,10 +1,4 @@
 import { useState, useMemo, useEffect } from "react";
-import { auth, db } from './firebase-web';
-import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
-import {
-  collection, collectionGroup, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, orderBy, limit, serverTimestamp, increment,
-} from 'firebase/firestore';
 
 const TRIAL_LIMIT = 10;
 
@@ -12,6 +6,11 @@ const TRIAL_LIMIT = 10;
 // ADMIN PANEL
 // ============================================================
 export default function AdminPanel() {
+  // Firebase from window (injected by dashboard.html CDN)
+  const fb = window.__firebase;
+  const { db, collection, collectionGroup, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+          query, orderBy, limit, serverTimestamp, increment } = fb;
+
   const [activeSection, setActiveSection] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -24,43 +23,10 @@ export default function AdminPanel() {
   const [showPromoForm, setShowPromoForm] = useState(false);
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", type: "percent", maxUses: "", expires: "" });
   const [toast, setToast] = useState(null);
-
-  // Auth state
-  const [adminUser, setAdminUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(true);
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [loginSubmitting, setLoginSubmitting] = useState(false);
 
-  // ─── Auth listener ───
+  // ─── Load all data on mount (auth already handled by dashboard.html Gate) ───
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      if (u) {
-        try {
-          const profileSnap = await getDoc(doc(db, 'users', u.uid));
-          if (profileSnap.exists() && profileSnap.data().role === 'admin') {
-            setAdminUser({ uid: u.uid, email: u.email, ...profileSnap.data() });
-          } else {
-            setAdminUser(null);
-            setLoginError("Access denied — admin role required.");
-          }
-        } catch (e) {
-          setAdminUser(null);
-          setLoginError("Failed to verify admin role: " + (e.code || e.message));
-        }
-      } else {
-        setAdminUser(null);
-      }
-      setAuthLoading(false);
-    });
-    return () => unsub();
-  }, []);
-
-  // ─── Load all data when admin is authenticated ───
-  useEffect(() => {
-    if (!adminUser) { setDataLoading(false); return; }
     const loadAll = async () => {
       setDataLoading(true);
       try {
@@ -76,7 +42,7 @@ export default function AdminPanel() {
         const promosSnap = await getDocs(collection(db, 'promos'));
         setPromos(promosSnap.docs.map(d => ({ id: d.id, ...d.data() })));
 
-        // Exercises count
+        // Exercises
         const exSnap = await getDocs(collection(db, 'exercises'));
         setExercises(exSnap.docs.map(d => ({ id: d.id, ...d.data() })));
 
@@ -98,7 +64,7 @@ export default function AdminPanel() {
       setDataLoading(false);
     };
     loadAll();
-  }, [adminUser]);
+  }, []);
 
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -220,53 +186,7 @@ export default function AdminPanel() {
     return u?.name || u?.email || uid.slice(0, 8);
   };
 
-  // ─── Login screen ───
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#0a0a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ color: "#555", fontSize: "1rem" }}>Loading...</div>
-      </div>
-    );
-  }
-
-  if (!adminUser) {
-    return (
-      <div style={{ minHeight: "100vh", background: "linear-gradient(145deg, #0a0a1a 0%, #0f0f24 50%, #0a0a1a 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
-        <div style={{ width: 360, padding: "40px", borderRadius: 20, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-          <div style={{ textAlign: "center", marginBottom: 32 }}>
-            <span style={{ fontSize: "2rem" }}>🎲</span>
-            <div style={{ fontSize: "1.3rem", fontWeight: 900, letterSpacing: "2px", background: "linear-gradient(135deg, #FF6B35, #FF2D2D)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginTop: 8 }}>DICED</div>
-            <div style={{ fontSize: "0.6rem", color: "#555", letterSpacing: "3px", fontWeight: 600, marginTop: 4 }}>ADMIN PANEL</div>
-          </div>
-          {loginError && <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(231,76,60,0.1)", border: "1px solid rgba(231,76,60,0.2)", color: "#E74C3C", fontSize: "0.78rem", marginBottom: 16 }}>{loginError}</div>}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <input type="email" placeholder="Admin email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)}
-              style={{ padding: "12px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#FFF", fontSize: "0.9rem", outline: "none" }} />
-            <input type="password" placeholder="Password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && !loginSubmitting && handleLogin()}
-              style={{ padding: "12px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#FFF", fontSize: "0.9rem", outline: "none" }} />
-            <button onClick={handleLogin} disabled={loginSubmitting}
-              style={{ padding: "12px", borderRadius: 10, border: "none", cursor: "pointer", background: "linear-gradient(135deg, #FF6B35, #FF2D2D)", color: "#FFF", fontSize: "0.9rem", fontWeight: 700, opacity: loginSubmitting ? 0.6 : 1 }}>
-              {loginSubmitting ? "Signing in..." : "Sign In"}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  async function handleLogin() {
-    if (!loginEmail || !loginPassword) return;
-    setLoginSubmitting(true);
-    setLoginError("");
-    try {
-      await signInWithEmailAndPassword(auth, loginEmail.trim(), loginPassword);
-    } catch (e) {
-      setLoginError(e.code === 'auth/invalid-credential' ? "Invalid email or password." : (e.message || "Login failed."));
-    }
-    setLoginSubmitting(false);
-  }
-
+  // Auth is handled by dashboard.html Gate — just show loading while data fetches
   if (dataLoading) {
     return (
       <div style={{ minHeight: "100vh", background: "#0a0a1a", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
@@ -319,7 +239,7 @@ export default function AdminPanel() {
 
         <div style={{ padding: "14px", borderRadius: 12, background: "rgba(255,107,53,0.06)", border: "1px solid rgba(255,107,53,0.12)", marginTop: "auto" }}>
           <div style={{ fontSize: "0.7rem", color: "#FF6B35", fontWeight: 700, marginBottom: 4 }}>🔒 Admin Access</div>
-          <div style={{ fontSize: "0.65rem", color: "#666" }}>{adminUser.email}</div>
+          <div style={{ fontSize: "0.65rem", color: "#666" }}>{fb.auth.currentUser?.email}</div>
         </div>
       </div>
 
