@@ -487,7 +487,7 @@ export default function App() {
     try {
       if (authMode === 'login') {
         const cred = await signInWithEmailAndPassword(auth, authEmail.trim(), authPassword);
-        try { await updateDoc(doc(db, 'users', cred.user.uid), { lastActive: new Date().toISOString().split('T')[0] }); } catch (_) {}
+        try { await updateDoc(doc(db, 'users', cred.user.uid), { email: authEmail.trim(), lastActive: new Date().toISOString().split('T')[0] }); } catch (_) {}
       } else {
         const cred = await createUserWithEmailAndPassword(auth, authEmail.trim(), authPassword);
         await setDoc(doc(db, 'users', cred.user.uid), {
@@ -719,7 +719,7 @@ export default function App() {
           id: g.id, label: g.label, icon: g.icon, color: g.color,
           reps: log.filter(e => e.group === g.id).reduce((a, b) => a + b.reps, 0),
         })),
-        log: log.map(e => ({ name: e.name, sub: e.sub, group: e.group, reps: e.reps, weight: e.weight || null })),
+        log: log.map(e => ({ name: e.name, sub: e.sub, group: e.group, equip: e.equip || null, reps: e.reps, weight: e.weight || null })),
       };
       // Update local state immediately so heatmap reflects the workout right away
       setWorkoutHistory(prev => [workout, ...prev]);

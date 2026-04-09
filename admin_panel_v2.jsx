@@ -500,15 +500,16 @@ export default function AdminPanel() {
                         {/* Exercise log */}
                         {w.log && w.log.length > 0 && (
                           <div style={{ padding: "8px 0" }}>
-                            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "6px 18px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                              {["Exercise", "Group", "Reps", "Weight"].map((h, hi) => (
+                            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 0.8fr 0.8fr", padding: "6px 18px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                              {["Exercise", "Group", "Equipment", "Reps", "Weight"].map((h, hi) => (
                                 <div key={hi} style={{ fontSize: "0.55rem", color: "#555", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase" }}>{h}</div>
                               ))}
                             </div>
                             {w.log.map((entry, ei) => (
-                              <div key={ei} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "8px 18px", background: ei % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent", borderBottom: "1px solid rgba(255,255,255,0.02)" }}>
+                              <div key={ei} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 0.8fr 0.8fr", padding: "8px 18px", background: ei % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent", borderBottom: "1px solid rgba(255,255,255,0.02)" }}>
                                 <div style={{ fontSize: "0.78rem", color: "#DDD", fontWeight: 500 }}>{entry.name}</div>
                                 <div style={{ fontSize: "0.72rem", color: "#888" }}>{entry.group || "—"}</div>
+                                <div style={{ fontSize: "0.72rem", color: "#3498DB" }}>{entry.equip ? entry.equip.replace(/_/g, " ") : "—"}</div>
                                 <div style={{ fontSize: "0.78rem", color: "#2ECC71", fontWeight: 600 }}>{entry.reps}</div>
                                 <div style={{ fontSize: "0.78rem", color: entry.weight ? "#FF6B35" : "#444", fontWeight: entry.weight ? 700 : 400 }}>{entry.weight ? entry.weight + " lbs" : "—"}</div>
                               </div>

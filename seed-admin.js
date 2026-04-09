@@ -96,10 +96,18 @@ async function backfillUsers() {
     const existing = await docRef.get();
 
     if (existing.exists) {
+      const data = existing.data();
+      const updates = {};
+      // Always ensure email is set
+      if (!data.email && userRecord.email) updates.email = userRecord.email;
       // Ensure admin role is set for admin email
-      if (userRecord.email === ADMIN_EMAIL && existing.data().role !== 'admin') {
-        await docRef.update({ role: 'admin', status: 'admin' });
-        console.log(`  ✓ Updated ${userRecord.email} → admin role`);
+      if (userRecord.email === ADMIN_EMAIL && data.role !== 'admin') {
+        updates.role = 'admin';
+        updates.status = 'admin';
+      }
+      if (Object.keys(updates).length > 0) {
+        await docRef.update(updates);
+        console.log(`  ✓ Updated ${userRecord.email} →`, updates);
       }
       skipped++;
       continue;
