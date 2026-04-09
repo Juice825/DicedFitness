@@ -24,8 +24,8 @@ export default function AdminPanel() {
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", type: "percent", maxUses: "", expires: "" });
   const [toast, setToast] = useState(null);
   const [dataLoading, setDataLoading] = useState(true);
-  const [editingName, setEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState("");
+  const [selectedUserWorkouts, setSelectedUserWorkouts] = useState([]);
+  const [workoutsLoading, setWorkoutsLoading] = useState(false);
 
   // ─── Load all data on mount (auth already handled by dashboard.html Gate) ───
   useEffect(() => {
@@ -127,14 +127,16 @@ export default function AdminPanel() {
     } catch (e) { showToast("Error: " + (e.code || e.message)); }
   };
 
-  const saveName = async (userId, newName) => {
+  const loadUserWorkouts = async (userId) => {
+    setWorkoutsLoading(true);
     try {
-      await updateDoc(doc(db, 'users', userId), { name: newName });
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, name: newName } : u));
-      if (selectedUser?.id === userId) setSelectedUser(prev => ({ ...prev, name: newName }));
-      setEditingName(false);
-      showToast("Name updated");
-    } catch (e) { showToast("Error: " + (e.code || e.message)); }
+      const wSnap = await getDocs(query(collection(db, 'users', userId, 'workouts'), orderBy('createdAt', 'desc')));
+      setSelectedUserWorkouts(wSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (e) {
+      console.warn('Could not load user workouts:', e.message);
+      setSelectedUserWorkouts([]);
+    }
+    setWorkoutsLoading(false);
   };
 
   const addPromo = async () => {
@@ -203,7 +205,7 @@ export default function AdminPanel() {
   // Helper: get user name for activity feed
   const getUserName = (uid) => {
     const u = users.find(u => u.id === uid);
-    return u?.name || u?.email || uid.slice(0, 8);
+    return u?.email || uid.slice(0, 8);
   };
 
   // Auth is handled by dashboard.html Gate — just show loading while data fetches
@@ -309,7 +311,7 @@ export default function AdminPanel() {
                 {users.filter(u => u.status === "trial" && (u.workouts || 0) >= 7).map((u, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)" }}>
                     <div>
-                      <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#EEE" }}>{u.name || u.email}</div>
+                      <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#EEE" }}>{u.email}</div>
                       <div style={{ fontSize: "0.7rem", color: "#666" }}>{u.email}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
@@ -330,10 +332,9 @@ export default function AdminPanel() {
               {[...users].sort((a, b) => (b.joined || "").localeCompare(a.joined || "")).slice(0, 8).map((u, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 8, background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${(i * 67) % 360}, 60%, 45%), hsl(${(i * 67 + 40) % 360}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 800, color: "#FFF" }}>{(u.name || u.email || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${(i * 67) % 360}, 60%, 45%), hsl(${(i * 67 + 40) % 360}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 800, color: "#FFF" }}>{(u.email || "?").slice(0, 2).toUpperCase()}</div>
                     <div>
-                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.name || u.email}</div>
-                      <div style={{ fontSize: "0.65rem", color: "#555" }}>{u.email}</div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.email}</div>
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -356,7 +357,7 @@ export default function AdminPanel() {
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", minWidth: 280 }}>
                 <span style={{ color: "#555" }}>🔍</span>
-                <input type="text" placeholder="Search by name or email..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                <input type="text" placeholder="Search by email..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                   style={{ background: "none", border: "none", outline: "none", color: "#EEE", fontSize: "0.82rem", width: "100%" }} />
                 {searchQuery && <button onClick={() => setSearchQuery("")} style={{ background: "none", border: "none", color: "#555", cursor: "pointer", fontSize: "0.9rem" }}>✕</button>}
               </div>
@@ -368,7 +369,7 @@ export default function AdminPanel() {
                   <div key={i} style={{ fontSize: "0.6rem", color: "#555", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" }}>{h}</div>
                 ))}
               </div>
-              {(searchQuery ? users.filter(u => (u.email || "").toLowerCase().includes(searchQuery.toLowerCase()) || (u.name || "").toLowerCase().includes(searchQuery.toLowerCase())) : users).map((u, i) => (
+              {(searchQuery ? users.filter(u => (u.email || "").toLowerCase().includes(searchQuery.toLowerCase())) : users).map((u, i) => (
                 <div key={u.id} onClick={() => setSelectedUser(u)}
                   style={{
                     display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 60px", padding: "14px 18px", cursor: "pointer",
@@ -378,10 +379,9 @@ export default function AdminPanel() {
                   onMouseEnter={e => e.currentTarget.style.background = "rgba(255,107,53,0.04)"}
                   onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent"}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: `linear-gradient(135deg, hsl(${(i * 67) % 360}, 60%, 45%), hsl(${(i * 67 + 40) % 360}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 800, color: "#FFF" }}>{(u.name || u.email || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: `linear-gradient(135deg, hsl(${(i * 67) % 360}, 60%, 45%), hsl(${(i * 67 + 40) % 360}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 800, color: "#FFF" }}>{(u.email || "?").slice(0, 2).toUpperCase()}</div>
                     <div>
-                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.name || "(no name)"}</div>
-                      <div style={{ fontSize: "0.65rem", color: "#555" }}>{u.email}</div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.email}</div>
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center" }}><StatusBadge status={u.status} /></div>
@@ -402,31 +402,13 @@ export default function AdminPanel() {
         {/* ========== USER DETAIL ========== */}
         {activeSection === "users" && selectedUser && (
           <div style={{ animation: "fadeIn 0.3s ease" }}>
-            <button onClick={() => { setSelectedUser(null); setEditingName(false); }} style={{ padding: "7px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#999", cursor: "pointer", fontSize: "0.75rem", marginBottom: 20 }}>← Back to Users</button>
+            <button onClick={() => { setSelectedUser(null); setSelectedUserWorkouts([]); }} style={{ padding: "7px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#999", cursor: "pointer", fontSize: "0.75rem", marginBottom: 20 }}>← Back to Users</button>
             <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "28px", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 20 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, marginBottom: 24 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${(users.indexOf(selectedUser) * 67) % 360}, 60%, 45%), hsl(${(users.indexOf(selectedUser) * 67 + 40) % 360}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", fontWeight: 800, color: "#FFF" }}>{(selectedUser.name || selectedUser.email || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>
+                  <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${(users.indexOf(selectedUser) * 67) % 360}, 60%, 45%), hsl(${(users.indexOf(selectedUser) * 67 + 40) % 360}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", fontWeight: 800, color: "#FFF" }}>{(selectedUser.email || "?").slice(0, 2).toUpperCase()}</div>
                   <div>
-                    {editingName ? (
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <input type="text" value={nameInput} onChange={e => setNameInput(e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Enter') saveName(selectedUser.id, nameInput.trim()); if (e.key === 'Escape') setEditingName(false); }}
-                          autoFocus
-                          style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(255,107,53,0.4)", background: "rgba(255,255,255,0.06)", color: "#FFF", fontSize: "1.1rem", fontWeight: 700, outline: "none", width: 220 }} />
-                        <button onClick={() => saveName(selectedUser.id, nameInput.trim())}
-                          style={{ padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer", background: "linear-gradient(135deg, #2ECC71, #27AE60)", color: "#FFF", fontSize: "0.72rem", fontWeight: 700 }}>Save</button>
-                        <button onClick={() => setEditingName(false)}
-                          style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#888", cursor: "pointer", fontSize: "0.72rem" }}>Cancel</button>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#FFF" }}>{selectedUser.name || "(No name)"}</h2>
-                        <button onClick={() => { setNameInput(selectedUser.name || ""); setEditingName(true); }}
-                          style={{ padding: "3px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#888", cursor: "pointer", fontSize: "0.65rem" }}>Edit</button>
-                      </div>
-                    )}
-                    <p style={{ margin: "2px 0 0", fontSize: "0.82rem", color: "#666" }}>{selectedUser.email}</p>
+                    <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#FFF" }}>{selectedUser.email}</h2>
                     {selectedUser.gymId && <p style={{ margin: "2px 0 0", fontSize: "0.72rem", color: "#FF6B35" }}>🏢 {gyms.find(g => g.id === selectedUser.gymId)?.name}</p>}
                   </div>
                 </div>
@@ -440,9 +422,11 @@ export default function AdminPanel() {
                   { label: "Last Active", value: selectedUser.lastActive || "—", color: "#2ECC71" },
                   { label: "Expires", value: selectedUser.expires || "N/A", color: "#9B59B6" },
                 ].map((s, i) => (
-                  <div key={i} style={{ padding: "14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div key={i} style={{ padding: "14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", cursor: s.label === "Workouts" ? "pointer" : "default" }}
+                    onClick={() => { if (s.label === "Workouts") loadUserWorkouts(selectedUser.id); }}>
                     <div style={{ fontSize: "1rem", fontWeight: 800, color: s.color }}>{s.value}</div>
                     <div style={{ fontSize: "0.6rem", color: "#555", letterSpacing: "1.5px", marginTop: 4, textTransform: "uppercase" }}>{s.label}</div>
+                    {s.label === "Workouts" && <div style={{ fontSize: "0.55rem", color: "#FF6B35", marginTop: 2 }}>Click to view details</div>}
                   </div>
                 ))}
               </div>
@@ -476,6 +460,70 @@ export default function AdminPanel() {
                 </div>
               )}
             </div>
+
+            {/* ── Workout History ── */}
+            {workoutsLoading && <div style={{ padding: 20, textAlign: "center", color: "#555", fontSize: "0.85rem" }}>Loading workouts...</div>}
+            {selectedUserWorkouts.length > 0 && (
+              <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "24px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <h3 style={{ margin: "0 0 16px", color: "#FF6B35", fontSize: "0.8rem", fontWeight: 800, letterSpacing: "1px" }}>🎲 WORKOUT HISTORY ({selectedUserWorkouts.length})</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {selectedUserWorkouts.map((w, wi) => {
+                    const dateStr = w.date || (w.createdAt?.toDate ? w.createdAt.toDate().toLocaleDateString() : "—");
+                    return (
+                      <div key={w.id} style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden", animation: `slideIn 0.3s ease ${wi * 0.04}s both` }}>
+                        {/* Workout header */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", background: "rgba(255,255,255,0.03)", flexWrap: "wrap", gap: 8 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            <span style={{ fontSize: "0.85rem" }}>📅</span>
+                            <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#EEE" }}>{dateStr}</span>
+                            {w.time && <span style={{ fontSize: "0.72rem", color: "#666" }}>{w.time}</span>}
+                          </div>
+                          <div style={{ display: "flex", gap: 14 }}>
+                            {w.totalRolls != null && <span style={{ fontSize: "0.72rem", color: "#3498DB" }}><strong>{w.totalRolls}</strong> rolls</span>}
+                            {w.totalReps != null && <span style={{ fontSize: "0.72rem", color: "#2ECC71" }}><strong>{w.totalReps}</strong> reps</span>}
+                            {w.uniqueExercises != null && <span style={{ fontSize: "0.72rem", color: "#9B59B6" }}><strong>{w.uniqueExercises}</strong> exercises</span>}
+                            {w.skipped > 0 && <span style={{ fontSize: "0.72rem", color: "#E74C3C" }}><strong>{w.skipped}</strong> skipped</span>}
+                          </div>
+                        </div>
+
+                        {/* Muscles hit */}
+                        {w.muscles && w.muscles.length > 0 && (
+                          <div style={{ display: "flex", gap: 8, padding: "10px 18px", flexWrap: "wrap", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                            {w.muscles.map((m, mi) => (
+                              <span key={mi} style={{ padding: "3px 10px", borderRadius: 20, background: `${m.color || '#FF6B35'}15`, border: `1px solid ${m.color || '#FF6B35'}30`, fontSize: "0.65rem", color: m.color || "#FF6B35", fontWeight: 600 }}>
+                                {m.label || m.id} • {m.reps} reps
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Exercise log */}
+                        {w.log && w.log.length > 0 && (
+                          <div style={{ padding: "8px 0" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "6px 18px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                              {["Exercise", "Group", "Reps", "Weight"].map((h, hi) => (
+                                <div key={hi} style={{ fontSize: "0.55rem", color: "#555", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase" }}>{h}</div>
+                              ))}
+                            </div>
+                            {w.log.map((entry, ei) => (
+                              <div key={ei} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "8px 18px", background: ei % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent", borderBottom: "1px solid rgba(255,255,255,0.02)" }}>
+                                <div style={{ fontSize: "0.78rem", color: "#DDD", fontWeight: 500 }}>{entry.name}</div>
+                                <div style={{ fontSize: "0.72rem", color: "#888" }}>{entry.group || "—"}</div>
+                                <div style={{ fontSize: "0.78rem", color: "#2ECC71", fontWeight: 600 }}>{entry.reps}</div>
+                                <div style={{ fontSize: "0.78rem", color: entry.weight ? "#FF6B35" : "#444", fontWeight: entry.weight ? 700 : 400 }}>{entry.weight ? entry.weight + " lbs" : "—"}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {!workoutsLoading && selectedUserWorkouts.length === 0 && selectedUserWorkouts !== null && (
+              <div style={{ padding: 20, textAlign: "center", color: "#555", fontSize: "0.85rem" }} />
+            )}
           </div>
         )}
 
@@ -651,10 +699,9 @@ export default function AdminPanel() {
               {gymMembers(selectedGym.id).map((u, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 8, background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${(i * 67) % 360}, 60%, 45%), hsl(${(i * 67 + 40) % 360}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 800, color: "#FFF" }}>{(u.name || u.email || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>
+                    <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${(i * 67) % 360}, 60%, 45%), hsl(${(i * 67 + 40) % 360}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 800, color: "#FFF" }}>{(u.email || "?").slice(0, 2).toUpperCase()}</div>
                     <div>
-                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.name || u.email}</div>
-                      <div style={{ fontSize: "0.65rem", color: "#555" }}>{u.email}</div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.email}</div>
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
