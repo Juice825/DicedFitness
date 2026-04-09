@@ -567,7 +567,6 @@ const EXERCISES = [
   { group:'core',      sub:'obliques',      equip:'bodyweight',         name:'Hanging Windshield Wiper',        desc:'Hang from bar, rotate legs side to side. Advanced obliques.' },
 
   // ── SMITH MACHINE EXTRAS ──────────────────────────────────────────────────
-  { group:'chest',     sub:'lower_chest',   equip:'smith_machine',      name:'Smith Machine Decline Press',     desc:'Decline bench in smith. Heavy lower chest work, no spotter needed.' },
   { group:'chest',     sub:'upper_chest',   equip:'smith_machine',      name:'Smith Machine Low-to-High Fly',   desc:'Set pins low, press up and in. Upper chest cable-fly feel.' },
   { group:'chest',     sub:'inner_chest',   equip:'smith_machine',      name:'Smith Machine Guillotine Press',  desc:'Bar to throat level, elbows wide. Extreme chest stretch.' },
   { group:'back',      sub:'rhomboids',     equip:'smith_machine',      name:'Smith Machine Bent Over Row',     desc:'Hinge forward, pull bar to lower chest. Strict rhomboid work.' },
@@ -600,33 +599,24 @@ const EXERCISES = [
   { group:'chest',     sub:'inner_chest',   equip:'kettlebell',         name:'Double KB Squeeze Press',         desc:'Two KBs pressed together, press overhead. Inner chest constant tension.' },
 
   // ── LOWER ABS EXTRAS ──────────────────────────────────────────────────────
-  { group:'core',      sub:'lower_abs',     equip:'bodyweight',         name:'Flutter Kicks',                   desc:'Lying flat, legs low. Alternate small kicks. Lower abs endurance.' },
-  { group:'core',      sub:'lower_abs',     equip:'bodyweight',         name:'Scissor Kicks',                   desc:'Cross legs over and under alternating. Lower abs and hip flexors.' },
   { group:'core',      sub:'lower_abs',     equip:'bodyweight',         name:'Tuck Crunch',                     desc:'Lie flat, bring knees and shoulders in simultaneously. Lower focus.' },
   { group:'core',      sub:'lower_abs',     equip:'bodyweight',         name:'Dead Bug',                        desc:'Extend opposite arm and leg, return. Lower ab and deep core stability.' },
   { group:'core',      sub:'lower_abs',     equip:'bodyweight',         name:'Hollow Body Hold',                desc:'Arms overhead, legs low off floor. Hold. Full lower ab contraction.' },
-  { group:'core',      sub:'lower_abs',     equip:'dumbbells',          name:'Weighted Leg Raise',              desc:'DB between feet, raise to 90°. Extra resistance for lower abs.' },
   { group:'core',      sub:'lower_abs',     equip:'functional_trainer', name:'Cable Knee Tuck',                 desc:'Low pulley ankle strap. Lie face-up, pull knees to chest.' },
   { group:'core',      sub:'lower_abs',     equip:'bands',              name:'Band Lying Leg Raise',            desc:'Band around ankles adds resistance to leg raise. Lower ab burner.' },
   { group:'core',      sub:'lower_abs',     equip:'kettlebell',         name:'KB Figure 8 Leg Raise',           desc:'KB between feet, trace figure-8 in air. Lower ab control.' },
 
   // ── CALVES EXTRAS ─────────────────────────────────────────────────────────
-  { group:'legs',      sub:'calves',        equip:'bodyweight',         name:'Single Leg Calf Raise',           desc:'One foot, raise on toes. Slow negative. Equal left/right strength.' },
   { group:'legs',      sub:'calves',        equip:'bodyweight',         name:'Jump Rope',                       desc:'Continuous jumping on toes. Explosive calf endurance and power.' },
   { group:'legs',      sub:'calves',        equip:'bodyweight',         name:'Explosive Calf Raise',            desc:'Fast, powerful raises onto toes. Builds reactive calf strength.' },
-  { group:'legs',      sub:'calves',        equip:'dumbbells',          name:'Single Leg DB Calf Raise',        desc:'One DB, one leg. Stand on edge of step. Full range of motion.' },
   { group:'legs',      sub:'calves',        equip:'dumbbells',          name:'Seated DB Calf Raise',            desc:'Sit on bench, DB on knee. Raise heel. Isolates soleus.' },
-  { group:'legs',      sub:'calves',        equip:'functional_trainer', name:'Cable Calf Raise',                desc:'Low pulley, strap around waist or hold. Rise on toes with resistance.' },
   { group:'legs',      sub:'calves',        equip:'barbell',            name:'Donkey Calf Raise',               desc:'Bent at hips, weight on low back. Raise on toes. Old school mass builder.' },
   { group:'legs',      sub:'calves',        equip:'bands',              name:'Banded Calf Raise',               desc:'Band under foot, over shoulder. Raise heel against resistance.' },
 
   // ── FOREARMS EXTRAS ───────────────────────────────────────────────────────
-  { group:'arms',      sub:'forearms',      equip:'dumbbells',          name:'DB Reverse Curl',                 desc:'Overhand grip, curl up. Brachioradialis and forearm extensors.' },
   { group:'arms',      sub:'forearms',      equip:'dumbbells',          name:'DB Zottman Curl',                 desc:'Curl up supinated, rotate to overhand at top, lower slowly. Both sides.' },
   { group:'arms',      sub:'forearms',      equip:'dumbbells',          name:'DB Wrist Roller',                 desc:'Hold DB vertically, roll wrist. Forearm pump in seconds.' },
   { group:'arms',      sub:'forearms',      equip:'dumbbells',          name:'Radial Deviation Curl',           desc:'Thumb side up, curl in radial deviation. Unique forearm angle.' },
-  { group:'arms',      sub:'forearms',      equip:'bodyweight',         name:'Dead Hang',                       desc:'Hang from bar, fully relaxed. Grip and forearm endurance builder.' },
-  { group:'arms',      sub:'forearms',      equip:'bodyweight',         name:'Towel Pull-Up',                   desc:'Drape towel over bar, grip ends. Pull up. Extreme grip training.' },
   { group:'arms',      sub:'forearms',      equip:'bodyweight',         name:'Finger Push-Up',                  desc:'Push-up on fingertips. Finger flexor and forearm strength.' },
   { group:'arms',      sub:'forearms',      equip:'functional_trainer', name:'Cable Reverse Wrist Curl',        desc:'Forearm on pad, pull wrist up against cable. Extensor isolation.' },
   { group:'arms',      sub:'forearms',      equip:'bands',              name:'Band Wrist Extension',            desc:'Band over top of hand, extend wrist up. Extensor strength.' },
@@ -635,22 +625,18 @@ const EXERCISES = [
   // ── REAR DELTS EXTRAS ─────────────────────────────────────────────────────
   { group:'shoulders', sub:'rear_delts',    equip:'dumbbells',          name:'Prone DB Rear Fly',               desc:'Face down on incline, raise arms to sides. Pure rear delt isolation.' },
   { group:'shoulders', sub:'rear_delts',    equip:'dumbbells',          name:'DB W-Raise',                      desc:'Bent over, elbows bent at 90°, raise to W shape. Rear delts and rhomboids.' },
-  { group:'shoulders', sub:'rear_delts',    equip:'functional_trainer', name:'Cable Rear Delt Row',             desc:'Single arm, low to high. Pull to ear level with elbow flared.' },
   { group:'shoulders', sub:'rear_delts',    equip:'bands',              name:'Band No Money Curl',              desc:'Elbows at sides, rotate forearms outward. Rotator cuff and rear delts.' },
   { group:'shoulders', sub:'rear_delts',    equip:'bodyweight',         name:'Scapular Pull-Up',                desc:'Hang from bar, depress and retract scapula without bending elbows.' },
   { group:'shoulders', sub:'rear_delts',    equip:'kettlebell',         name:'KB Face Pull',                    desc:'Hinge forward, row KBs to face with elbows flared. Rear delt burn.' },
 
   // ── INNER THIGH EXTRAS ────────────────────────────────────────────────────
-  { group:'legs',      sub:'inner_thigh',   equip:'bodyweight',         name:'Sumo Squat Hold',                 desc:'Wide squat, hold at bottom. Inner thigh stretch and strength.' },
   { group:'legs',      sub:'inner_thigh',   equip:'bodyweight',         name:'Side Lying Leg Raise (Lower)',    desc:'Bottom leg raises up across body. Inner thigh and adductor.' },
-  { group:'legs',      sub:'inner_thigh',   equip:'bodyweight',         name:'Frog Squat',                      desc:'Squat with knees wide, heels together. Deep inner thigh stretch.' },
   { group:'legs',      sub:'inner_thigh',   equip:'dumbbells',          name:'DB Sumo Deadlift',                desc:'Wide stance, DB between legs. Pull up. Inner thigh and glutes.' },
   { group:'legs',      sub:'inner_thigh',   equip:'functional_trainer', name:'Cable Adduction',                 desc:'Ankle strap, low pulley to side. Pull leg across midline. Adductor.' },
   { group:'legs',      sub:'inner_thigh',   equip:'bands',              name:'Banded Side Step',                desc:'Band around ankles, step laterally. Abductors and adductors both fire.' },
   { group:'legs',      sub:'inner_thigh',   equip:'kettlebell',         name:'KB Sumo High Pull',               desc:'Wide stance, KB between legs. Explosive pull to chin. Inner thigh power.' },
 
   // ── UPPER ABS EXTRAS ──────────────────────────────────────────────────────
-  { group:'core',      sub:'upper_abs',     equip:'bodyweight',         name:'Crunch',                          desc:'Classic crunch. Hands behind head, lift shoulders. Squeeze upper abs.' },
   { group:'core',      sub:'upper_abs',     equip:'bodyweight',         name:'Bicycle Crunch',                  desc:'Rotate elbow to opposite knee. Alternating. Upper abs and obliques.' },
   { group:'core',      sub:'upper_abs',     equip:'bodyweight',         name:'Reverse Crunch',                  desc:'Hips come up, knees pull toward chest. Lower and upper abs together.' },
   { group:'core',      sub:'upper_abs',     equip:'bodyweight',         name:'Toe Touch Crunch',                desc:'Legs vertical, reach hands to toes. Upper ab contraction.' },

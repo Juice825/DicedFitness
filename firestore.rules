@@ -13,17 +13,31 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // ---------- User role docs ----------
-    // Each user has a doc at users/{uid} with at minimum { role: 'admin' | 'user' }.
-    // Users can read their own doc (needed by the dashboard RBAC check).
-    // Roles are managed from the Firebase Console — never writable from clients.
+    // ---------- User profile docs ----------
     match /users/{uid} {
       allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
-      allow write: if false;
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow update: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+    }
+
+    // ---------- User subcollections ----------
+    match /users/{uid}/workouts/{workoutId} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+      allow read: if isAdmin();
+    }
+    match /users/{uid}/exercises/{exerciseId} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+      allow read: if isAdmin();
+    }
+
+    // ---------- Shared exercise library ----------
+    match /exercises/{exerciseId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     // ---------- Admin-only collections ----------
-    // Anything the admin panel manages should live under collections only admins can touch.
     match /gyms/{gymId} {
       allow read, write: if isAdmin();
     }
@@ -32,7 +46,6 @@ service cloud.firestore {
     }
 
     // ---------- Default deny ----------
-    // Anything not explicitly matched above is denied.
     match /{document=**} {
       allow read, write: if false;
     }

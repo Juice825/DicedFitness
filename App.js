@@ -14,7 +14,7 @@ import {
 } from 'firebase/auth';
 import {
   collection, doc, addDoc, setDoc, deleteDoc,
-  getDocs, orderBy, query, serverTimestamp,
+  getDocs, orderBy, query, serverTimestamp, increment, updateDoc,
 } from 'firebase/firestore';
 
 // ============================================================
@@ -486,9 +486,21 @@ export default function App() {
     setAuthSubmitting(true); setAuthError('');
     try {
       if (authMode === 'login') {
-        await signInWithEmailAndPassword(auth, authEmail.trim(), authPassword);
+        const cred = await signInWithEmailAndPassword(auth, authEmail.trim(), authPassword);
+        try { await updateDoc(doc(db, 'users', cred.user.uid), { lastActive: new Date().toISOString().split('T')[0] }); } catch (_) {}
       } else {
-        await createUserWithEmailAndPassword(auth, authEmail.trim(), authPassword);
+        const cred = await createUserWithEmailAndPassword(auth, authEmail.trim(), authPassword);
+        await setDoc(doc(db, 'users', cred.user.uid), {
+          email: authEmail.trim(),
+          name: '',
+          status: 'trial',
+          role: 'user',
+          joined: new Date().toISOString().split('T')[0],
+          lastActive: new Date().toISOString().split('T')[0],
+          workouts: 0,
+          gymId: null,
+          expires: null,
+        });
       }
       setAuthEmail(''); setAuthPassword('');
     } catch (e) {
@@ -548,6 +560,7 @@ export default function App() {
       ...workout,
       createdAt: serverTimestamp(),
     });
+    try { await updateDoc(doc(db, 'users', user.uid), { workouts: increment(1), lastActive: new Date().toISOString().split('T')[0] }); } catch (_) {}
   };
 
   const deleteWorkoutFromFirestore = async (id) => {

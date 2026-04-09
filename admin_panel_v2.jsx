@@ -1,82 +1,10 @@
-import { useState, useMemo } from "react";
-
-// ============================================================
-// SIMULATED DATA
-// ============================================================
-const MOCK_USERS = [
-  { id: 1, email: "mike.rivera@gmail.com", name: "Mike Rivera", joined: "2026-03-15", workouts: 24, status: "premium", expires: "2027-03-15", lastActive: "2026-04-06", gymId: 1 },
-  { id: 2, email: "sarah.kim@yahoo.com", name: "Sarah Kim", joined: "2026-03-20", workouts: 18, status: "trial", expires: null, lastActive: "2026-04-07", gymId: 1 },
-  { id: 3, email: "jay.thompson@outlook.com", name: "Jay Thompson", joined: "2026-03-22", workouts: 9, status: "trial", expires: null, lastActive: "2026-04-05", gymId: 2 },
-  { id: 4, email: "lisa.morales@gmail.com", name: "Lisa Morales", joined: "2026-03-28", workouts: 12, status: "premium", expires: "2026-09-28", lastActive: "2026-04-07", gymId: null },
-  { id: 5, email: "chris.walker@gmail.com", name: "Chris Walker", joined: "2026-04-01", workouts: 5, status: "trial", expires: null, lastActive: "2026-04-06", gymId: 2 },
-  { id: 6, email: "ashley.nguyen@icloud.com", name: "Ashley Nguyen", joined: "2026-04-02", workouts: 3, status: "trial", expires: null, lastActive: "2026-04-04", gymId: null },
-  { id: 7, email: "derek.jones@gmail.com", name: "Derek Jones", joined: "2026-03-10", workouts: 31, status: "premium", expires: "2027-03-10", lastActive: "2026-04-07", gymId: 1 },
-  { id: 8, email: "nicole.may@gmail.com", name: "Nicole May", joined: "2026-04-05", workouts: 1, status: "trial", expires: null, lastActive: "2026-04-05", gymId: 3 },
-  { id: 9, email: "brandon.lee@yahoo.com", name: "Brandon Lee", joined: "2026-03-18", workouts: 11, status: "expired", expires: "2026-04-01", lastActive: "2026-03-30", gymId: 1 },
-  { id: 10, email: "maria.santos@gmail.com", name: "Maria Santos", joined: "2026-04-03", workouts: 7, status: "trial", expires: null, lastActive: "2026-04-07", gymId: 3 },
-  { id: 11, email: "juice@dicedfitness.com", name: "Joe (Juice)", joined: "2026-03-01", workouts: 88, status: "admin", expires: null, lastActive: "2026-04-07", gymId: null },
-];
-
-const MOCK_GYMS = [
-  {
-    id: 1, name: "Iron District Gym", location: "Astoria, Queens NY", owner: "Tony Russo",
-    ownerEmail: "tony@irondistrictgym.com", phone: "(718) 555-0142",
-    joined: "2026-03-10", plan: "premium", planExpires: "2027-03-10", monthlyFee: 49.99,
-    code: "IRON-DISTRICT", codeUses: 4,
-    equipment: [
-      { name: "Functional Trainer", qty: 3, totalSessions: 1842 },
-      { name: "Dumbbells", qty: 8, totalSessions: 1520 },
-      { name: "Barbell Rack", qty: 4, totalSessions: 980 },
-      { name: "Smith Machine", qty: 2, totalSessions: 620 },
-      { name: "Leg Press", qty: 2, totalSessions: 410 },
-    ],
-    trainers: ["Mike R.", "Sarah K."],
-    topExercises: ["Cable Crossover", "Bicep Curl", "Lat Pulldown"],
-    peakHour: "6:00 PM",
-    avgDailyUsers: 34,
-  },
-  {
-    id: 2, name: "Flex Fitness NYC", location: "Inwood, Manhattan NY", owner: "Carmen Diaz",
-    ownerEmail: "carmen@flexfitnessnyc.com", phone: "(212) 555-0198",
-    joined: "2026-03-18", plan: "basic", planExpires: "2026-09-18", monthlyFee: 29.99,
-    code: "FLEX-NYC", codeUses: 2,
-    equipment: [
-      { name: "Dumbbells", qty: 6, totalSessions: 890 },
-      { name: "Bodyweight Area", qty: 1, totalSessions: 720 },
-      { name: "Resistance Bands", qty: 10, totalSessions: 340 },
-      { name: "Kettlebells", qty: 6, totalSessions: 280 },
-    ],
-    trainers: ["Jay T."],
-    topExercises: ["Push-Ups", "Goblet Squat", "Band Pull-Apart"],
-    peakHour: "7:00 AM",
-    avgDailyUsers: 18,
-  },
-  {
-    id: 3, name: "PowerHouse BK", location: "Bay Ridge, Brooklyn NY", owner: "Marcus Johnson",
-    ownerEmail: "marcus@powerhousebk.com", phone: "(718) 555-0267",
-    joined: "2026-04-01", plan: "trial", planExpires: "2026-05-01", monthlyFee: 0,
-    code: "POWER-BK", codeUses: 2,
-    equipment: [
-      { name: "Functional Trainer", qty: 2, totalSessions: 210 },
-      { name: "Dumbbells", qty: 10, totalSessions: 185 },
-      { name: "Barbell Rack", qty: 6, totalSessions: 160 },
-      { name: "Smith Machine", qty: 1, totalSessions: 90 },
-      { name: "Kettlebells", qty: 4, totalSessions: 75 },
-      { name: "Bodyweight Area", qty: 1, totalSessions: 120 },
-    ],
-    trainers: ["Lisa M.", "Andre W."],
-    topExercises: ["Bench Press", "Deadlift", "Shoulder Press"],
-    peakHour: "5:30 PM",
-    avgDailyUsers: 12,
-  },
-];
-
-const MOCK_PROMOS = [
-  { id: 1, code: "FAMILY100", discount: 100, type: "percent", uses: 3, maxUses: 10, expires: null, active: true },
-  { id: 2, code: "FRIENDS50", discount: 50, type: "percent", uses: 7, maxUses: 20, expires: "2026-06-01", active: true },
-  { id: 3, code: "LAUNCH25", discount: 25, type: "percent", uses: 42, maxUses: 100, expires: "2026-05-01", active: true },
-  { id: 4, code: "EARLYBIRD", discount: 3, type: "dollars", uses: 15, maxUses: 50, expires: "2026-04-30", active: false },
-];
+import { useState, useMemo, useEffect } from "react";
+import { auth, db } from './firebase-web';
+import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
+import {
+  collection, collectionGroup, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+  query, orderBy, limit, serverTimestamp, increment,
+} from 'firebase/firestore';
 
 const TRIAL_LIMIT = 10;
 
@@ -88,66 +16,179 @@ export default function AdminPanel() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedGym, setSelectedGym] = useState(null);
-  const [users, setUsers] = useState(MOCK_USERS);
-  const [gyms, setGyms] = useState(MOCK_GYMS);
-  const [promos, setPromos] = useState(MOCK_PROMOS);
+  const [users, setUsers] = useState([]);
+  const [gyms, setGyms] = useState([]);
+  const [promos, setPromos] = useState([]);
+  const [exercises, setExercises] = useState([]);
+  const [recentWorkouts, setRecentWorkouts] = useState([]);
   const [showPromoForm, setShowPromoForm] = useState(false);
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", type: "percent", maxUses: "", expires: "" });
   const [toast, setToast] = useState(null);
 
-  const stats = useMemo(() => ({
-    total: users.length,
-    trial: users.filter(u => u.status === "trial").length,
-    premium: users.filter(u => u.status === "premium").length,
-    expired: users.filter(u => u.status === "expired").length,
-    activeToday: users.filter(u => u.lastActive === "2026-04-07").length,
-    avgWorkouts: Math.round(users.reduce((a, u) => a + u.workouts, 0) / users.length),
-    aboutToConvert: users.filter(u => u.status === "trial" && u.workouts >= 7).length,
-    totalGyms: gyms.length,
-    gymRevenue: gyms.reduce((a, g) => a + g.monthlyFee, 0),
-  }), [users, gyms]);
+  // Auth state
+  const [adminUser, setAdminUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginSubmitting, setLoginSubmitting] = useState(false);
+
+  // ─── Auth listener ───
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      if (u) {
+        try {
+          const profileSnap = await getDoc(doc(db, 'users', u.uid));
+          if (profileSnap.exists() && profileSnap.data().role === 'admin') {
+            setAdminUser({ uid: u.uid, email: u.email, ...profileSnap.data() });
+          } else {
+            setAdminUser(null);
+            setLoginError("Access denied — admin role required.");
+          }
+        } catch (e) {
+          setAdminUser(null);
+          setLoginError("Failed to verify admin role: " + (e.code || e.message));
+        }
+      } else {
+        setAdminUser(null);
+      }
+      setAuthLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  // ─── Load all data when admin is authenticated ───
+  useEffect(() => {
+    if (!adminUser) { setDataLoading(false); return; }
+    const loadAll = async () => {
+      setDataLoading(true);
+      try {
+        // Users
+        const usersSnap = await getDocs(collection(db, 'users'));
+        setUsers(usersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+        // Gyms
+        const gymsSnap = await getDocs(collection(db, 'gyms'));
+        setGyms(gymsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+        // Promos
+        const promosSnap = await getDocs(collection(db, 'promos'));
+        setPromos(promosSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+        // Exercises count
+        const exSnap = await getDocs(collection(db, 'exercises'));
+        setExercises(exSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+        // Recent workouts (collectionGroup — needs Firestore index on workouts/createdAt)
+        try {
+          const wSnap = await getDocs(query(collectionGroup(db, 'workouts'), orderBy('createdAt', 'desc'), limit(20)));
+          setRecentWorkouts(wSnap.docs.map(d => {
+            const path = d.ref.path; // users/{uid}/workouts/{id}
+            const uid = path.split('/')[1];
+            return { id: d.id, uid, ...d.data() };
+          }));
+        } catch (e) {
+          console.warn('Could not load recent workouts (index may be needed):', e.message);
+          setRecentWorkouts([]);
+        }
+      } catch (e) {
+        console.error('Failed to load admin data:', e);
+      }
+      setDataLoading(false);
+    };
+    loadAll();
+  }, [adminUser]);
+
+  const stats = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return {
+      total: users.length,
+      trial: users.filter(u => u.status === "trial").length,
+      premium: users.filter(u => u.status === "premium").length,
+      expired: users.filter(u => u.status === "expired").length,
+      activeToday: users.filter(u => u.lastActive === today).length,
+      avgWorkouts: users.length ? Math.round(users.reduce((a, u) => a + (u.workouts || 0), 0) / users.length) : 0,
+      aboutToConvert: users.filter(u => u.status === "trial" && (u.workouts || 0) >= 7).length,
+      totalGyms: gyms.length,
+      gymRevenue: gyms.reduce((a, g) => a + (g.monthlyFee || 0), 0),
+      totalExercises: exercises.length,
+    };
+  }, [users, gyms, exercises]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
-  const togglePremium = (userId) => {
-    setUsers(prev => prev.map(u => {
-      if (u.id !== userId) return u;
-      if (u.status === "premium") return { ...u, status: "trial", expires: null };
-      const exp = new Date(); exp.setFullYear(exp.getFullYear() + 1);
-      return { ...u, status: "premium", expires: exp.toISOString().split("T")[0] };
-    }));
-    showToast("Account status updated");
+  // ─── Firestore mutations ───
+  const togglePremium = async (userId) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+    const isPremium = user.status === "premium";
+    const newStatus = isPremium ? "trial" : "premium";
+    const newExpires = isPremium ? null : (() => { const d = new Date(); d.setFullYear(d.getFullYear() + 1); return d.toISOString().split("T")[0]; })();
+    try {
+      await updateDoc(doc(db, 'users', userId), { status: newStatus, expires: newExpires });
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: newStatus, expires: newExpires } : u));
+      if (selectedUser?.id === userId) setSelectedUser(prev => ({ ...prev, status: newStatus, expires: newExpires }));
+      showToast("Account status updated");
+    } catch (e) { showToast("Error: " + (e.code || e.message)); }
   };
 
-  const grantFreeAccess = (userId) => {
-    setUsers(prev => prev.map(u => {
-      if (u.id !== userId) return u;
-      return { ...u, status: "premium", expires: "2125-04-07" };
-    }));
-    showToast("Free lifetime access granted");
+  const grantFreeAccess = async (userId) => {
+    try {
+      await updateDoc(doc(db, 'users', userId), { status: "premium", expires: "2125-04-07" });
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: "premium", expires: "2125-04-07" } : u));
+      if (selectedUser?.id === userId) setSelectedUser(prev => ({ ...prev, status: "premium", expires: "2125-04-07" }));
+      showToast("Free lifetime access granted");
+    } catch (e) { showToast("Error: " + (e.code || e.message)); }
   };
 
-  const resetTrial = (userId) => {
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, workouts: 0, status: "trial", expires: null } : u));
-    showToast("Trial reset — 10 free workouts restored");
+  const resetTrial = async (userId) => {
+    try {
+      await updateDoc(doc(db, 'users', userId), { workouts: 0, status: "trial", expires: null });
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, workouts: 0, status: "trial", expires: null } : u));
+      if (selectedUser?.id === userId) setSelectedUser(prev => ({ ...prev, workouts: 0, status: "trial" }));
+      showToast("Trial reset — 10 free workouts restored");
+    } catch (e) { showToast("Error: " + (e.code || e.message)); }
   };
 
-  const addPromo = () => {
+  const addPromo = async () => {
     if (!newPromo.code || !newPromo.discount) return;
-    const promo = {
-      id: Date.now(), code: newPromo.code.toUpperCase().replace(/\s/g, ""),
-      discount: Number(newPromo.discount), type: newPromo.type,
-      uses: 0, maxUses: Number(newPromo.maxUses) || 999,
-      expires: newPromo.expires || null, active: true,
+    const promoData = {
+      code: newPromo.code.toUpperCase().replace(/\s/g, ""),
+      discount: Number(newPromo.discount),
+      type: newPromo.type,
+      uses: 0,
+      maxUses: Number(newPromo.maxUses) || 999,
+      expires: newPromo.expires || null,
+      active: true,
+      createdAt: serverTimestamp(),
     };
-    setPromos(prev => [promo, ...prev]);
-    setNewPromo({ code: "", discount: "", type: "percent", maxUses: "", expires: "" });
-    setShowPromoForm(false);
-    showToast(`Promo code ${promo.code} created`);
+    try {
+      const ref = await addDoc(collection(db, 'promos'), promoData);
+      setPromos(prev => [{ id: ref.id, ...promoData }, ...prev]);
+      setNewPromo({ code: "", discount: "", type: "percent", maxUses: "", expires: "" });
+      setShowPromoForm(false);
+      showToast(`Promo code ${promoData.code} created`);
+    } catch (e) { showToast("Error: " + (e.code || e.message)); }
   };
 
-  const togglePromo = (id) => { setPromos(prev => prev.map(p => p.id === id ? { ...p, active: !p.active } : p)); showToast("Promo code updated"); };
-  const deletePromo = (id) => { setPromos(prev => prev.filter(p => p.id !== id)); showToast("Promo code deleted"); };
+  const togglePromo = async (id) => {
+    const promo = promos.find(p => p.id === id);
+    if (!promo) return;
+    try {
+      await updateDoc(doc(db, 'promos', id), { active: !promo.active });
+      setPromos(prev => prev.map(p => p.id === id ? { ...p, active: !p.active } : p));
+      showToast("Promo code updated");
+    } catch (e) { showToast("Error: " + (e.code || e.message)); }
+  };
+
+  const deletePromo = async (id) => {
+    try {
+      await deleteDoc(doc(db, 'promos', id));
+      setPromos(prev => prev.filter(p => p.id !== id));
+      showToast("Promo code deleted");
+    } catch (e) { showToast("Error: " + (e.code || e.message)); }
+  };
 
   const StatusBadge = ({ status }) => {
     const cfg = {
@@ -172,6 +213,70 @@ export default function AdminPanel() {
 
   const gymMembers = (gymId) => users.filter(u => u.gymId === gymId);
   const unlinkedUsers = users.filter(u => u.gymId === null);
+
+  // Helper: get user name for activity feed
+  const getUserName = (uid) => {
+    const u = users.find(u => u.id === uid);
+    return u?.name || u?.email || uid.slice(0, 8);
+  };
+
+  // ─── Login screen ───
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#0a0a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ color: "#555", fontSize: "1rem" }}>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!adminUser) {
+    return (
+      <div style={{ minHeight: "100vh", background: "linear-gradient(145deg, #0a0a1a 0%, #0f0f24 50%, #0a0a1a 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+        <div style={{ width: 360, padding: "40px", borderRadius: 20, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <span style={{ fontSize: "2rem" }}>🎲</span>
+            <div style={{ fontSize: "1.3rem", fontWeight: 900, letterSpacing: "2px", background: "linear-gradient(135deg, #FF6B35, #FF2D2D)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginTop: 8 }}>DICED</div>
+            <div style={{ fontSize: "0.6rem", color: "#555", letterSpacing: "3px", fontWeight: 600, marginTop: 4 }}>ADMIN PANEL</div>
+          </div>
+          {loginError && <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(231,76,60,0.1)", border: "1px solid rgba(231,76,60,0.2)", color: "#E74C3C", fontSize: "0.78rem", marginBottom: 16 }}>{loginError}</div>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <input type="email" placeholder="Admin email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)}
+              style={{ padding: "12px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#FFF", fontSize: "0.9rem", outline: "none" }} />
+            <input type="password" placeholder="Password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !loginSubmitting && handleLogin()}
+              style={{ padding: "12px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#FFF", fontSize: "0.9rem", outline: "none" }} />
+            <button onClick={handleLogin} disabled={loginSubmitting}
+              style={{ padding: "12px", borderRadius: 10, border: "none", cursor: "pointer", background: "linear-gradient(135deg, #FF6B35, #FF2D2D)", color: "#FFF", fontSize: "0.9rem", fontWeight: 700, opacity: loginSubmitting ? 0.6 : 1 }}>
+              {loginSubmitting ? "Signing in..." : "Sign In"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  async function handleLogin() {
+    if (!loginEmail || !loginPassword) return;
+    setLoginSubmitting(true);
+    setLoginError("");
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail.trim(), loginPassword);
+    } catch (e) {
+      setLoginError(e.code === 'auth/invalid-credential' ? "Invalid email or password." : (e.message || "Login failed."));
+    }
+    setLoginSubmitting(false);
+  }
+
+  if (dataLoading) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#0a0a1a", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
+        <span style={{ fontSize: "2rem" }}>🎲</span>
+        <div style={{ color: "#555", fontSize: "0.9rem" }}>Loading dashboard data...</div>
+      </div>
+    );
+  }
+
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(145deg, #0a0a1a 0%, #0f0f24 50%, #0a0a1a 100%)", color: "#F0F0F0", fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif", display: "flex" }}>
@@ -214,7 +319,7 @@ export default function AdminPanel() {
 
         <div style={{ padding: "14px", borderRadius: 12, background: "rgba(255,107,53,0.06)", border: "1px solid rgba(255,107,53,0.12)", marginTop: "auto" }}>
           <div style={{ fontSize: "0.7rem", color: "#FF6B35", fontWeight: 700, marginBottom: 4 }}>🔒 Admin Access</div>
-          <div style={{ fontSize: "0.65rem", color: "#666" }}>juice@dicedfitness.com</div>
+          <div style={{ fontSize: "0.65rem", color: "#666" }}>{adminUser.email}</div>
         </div>
       </div>
 
@@ -240,7 +345,7 @@ export default function AdminPanel() {
                 { label: "Premium", value: stats.premium, icon: "💎", color: "#2ECC71", sub: "$" + (stats.premium * 9.99).toFixed(0) + "/mo" },
                 { label: "Partner Gyms", value: stats.totalGyms, icon: "🏢", color: "#FF6B35", sub: "$" + stats.gymRevenue.toFixed(0) + "/mo B2B" },
                 { label: "Avg Workouts", value: stats.avgWorkouts, icon: "🏋️", color: "#9B59B6", sub: "per user" },
-                { label: "Active Promos", value: promos.filter(p => p.active).length, icon: "🎟️", color: "#E67E22", sub: `${promos.reduce((a, p) => a + p.uses, 0)} total uses` },
+                { label: "Exercises", value: stats.totalExercises, icon: "📋", color: "#E67E22", sub: "in shared library" },
               ].map((kpi, i) => (
                 <div key={i} style={{
                   background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "18px 16px",
@@ -261,19 +366,19 @@ export default function AdminPanel() {
             <div style={{ background: "rgba(243,156,18,0.06)", borderRadius: 14, padding: "20px", border: "1px solid rgba(243,156,18,0.15)", marginBottom: 20 }}>
               <h3 style={{ margin: "0 0 12px", color: "#F39C12", fontSize: "0.8rem", fontWeight: 800, letterSpacing: "1px" }}>🔥 USERS APPROACHING PAYWALL</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {users.filter(u => u.status === "trial" && u.workouts >= 7).map((u, i) => (
+                {users.filter(u => u.status === "trial" && (u.workouts || 0) >= 7).map((u, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)" }}>
                     <div>
-                      <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#EEE" }}>{u.name}</div>
+                      <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#EEE" }}>{u.name || u.email}</div>
                       <div style={{ fontSize: "0.7rem", color: "#666" }}>{u.email}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: "1rem", fontWeight: 800, color: "#F39C12" }}>{u.workouts}/{TRIAL_LIMIT}</div>
+                      <div style={{ fontSize: "1rem", fontWeight: 800, color: "#F39C12" }}>{u.workouts || 0}/{TRIAL_LIMIT}</div>
                       <div style={{ fontSize: "0.6rem", color: "#666" }}>workouts used</div>
                     </div>
                   </div>
                 ))}
-                {users.filter(u => u.status === "trial" && u.workouts >= 7).length === 0 && (
+                {users.filter(u => u.status === "trial" && (u.workouts || 0) >= 7).length === 0 && (
                   <div style={{ fontSize: "0.8rem", color: "#555", textAlign: "center", padding: 10 }}>No users near paywall yet</div>
                 )}
               </div>
@@ -282,12 +387,12 @@ export default function AdminPanel() {
             {/* Recent Signups */}
             <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "20px", border: "1px solid rgba(255,255,255,0.06)" }}>
               <h3 style={{ margin: "0 0 12px", color: "#FF6B35", fontSize: "0.8rem", fontWeight: 800, letterSpacing: "1px" }}>📥 RECENT SIGNUPS</h3>
-              {users.filter(u => new Date(u.joined) >= new Date("2026-04-01")).sort((a, b) => new Date(b.joined) - new Date(a.joined)).map((u, i) => (
+              {[...users].sort((a, b) => (b.joined || "").localeCompare(a.joined || "")).slice(0, 8).map((u, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 8, background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${u.id * 37}, 60%, 45%), hsl(${u.id * 37 + 40}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 800, color: "#FFF" }}>{u.name.split(" ").map(n => n[0]).join("")}</div>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${(i * 67) % 360}, 60%, 45%), hsl(${(i * 67 + 40) % 360}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 800, color: "#FFF" }}>{(u.name || u.email || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>
                     <div>
-                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.name}</div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.name || u.email}</div>
                       <div style={{ fontSize: "0.65rem", color: "#555" }}>{u.email}</div>
                     </div>
                   </div>
@@ -323,7 +428,7 @@ export default function AdminPanel() {
                   <div key={i} style={{ fontSize: "0.6rem", color: "#555", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" }}>{h}</div>
                 ))}
               </div>
-              {(searchQuery ? users.filter(u => u.email.toLowerCase().includes(searchQuery.toLowerCase()) || u.name.toLowerCase().includes(searchQuery.toLowerCase())) : users).map((u, i) => (
+              {(searchQuery ? users.filter(u => (u.email || "").toLowerCase().includes(searchQuery.toLowerCase()) || (u.name || "").toLowerCase().includes(searchQuery.toLowerCase())) : users).map((u, i) => (
                 <div key={u.id} onClick={() => setSelectedUser(u)}
                   style={{
                     display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 60px", padding: "14px 18px", cursor: "pointer",
@@ -333,20 +438,20 @@ export default function AdminPanel() {
                   onMouseEnter={e => e.currentTarget.style.background = "rgba(255,107,53,0.04)"}
                   onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent"}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: `linear-gradient(135deg, hsl(${u.id * 37}, 60%, 45%), hsl(${u.id * 37 + 40}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 800, color: "#FFF" }}>{u.name.split(" ").map(n => n[0]).join("")}</div>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, background: `linear-gradient(135deg, hsl(${(i * 67) % 360}, 60%, 45%), hsl(${(i * 67 + 40) % 360}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 800, color: "#FFF" }}>{(u.name || u.email || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>
                     <div>
-                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.name}</div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.name || "(no name)"}</div>
                       <div style={{ fontSize: "0.65rem", color: "#555" }}>{u.email}</div>
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center" }}><StatusBadge status={u.status} /></div>
-                  <div style={{ display: "flex", alignItems: "center", fontSize: "0.9rem", fontWeight: 700, color: u.status === "trial" && u.workouts >= 7 ? "#F39C12" : "#AAA" }}>
-                    {u.workouts}{u.status === "trial" ? `/${TRIAL_LIMIT}` : ""}
+                  <div style={{ display: "flex", alignItems: "center", fontSize: "0.9rem", fontWeight: 700, color: u.status === "trial" && (u.workouts || 0) >= 7 ? "#F39C12" : "#AAA" }}>
+                    {u.workouts || 0}{u.status === "trial" ? `/${TRIAL_LIMIT}` : ""}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", fontSize: "0.72rem", color: "#666" }}>
                     {u.gymId ? gyms.find(g => g.id === u.gymId)?.name?.split(" ")[0] || "—" : "—"}
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", fontSize: "0.72rem", color: "#666" }}>{u.lastActive}</div>
+                  <div style={{ display: "flex", alignItems: "center", fontSize: "0.72rem", color: "#666" }}>{u.lastActive || "—"}</div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", fontSize: "0.8rem", color: "#444" }}>→</div>
                 </div>
               ))}
@@ -361,9 +466,9 @@ export default function AdminPanel() {
             <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "28px", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 20 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, marginBottom: 24 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${selectedUser.id * 37}, 60%, 45%), hsl(${selectedUser.id * 37 + 40}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", fontWeight: 800, color: "#FFF" }}>{selectedUser.name.split(" ").map(n => n[0]).join("")}</div>
+                  <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${(users.indexOf(selectedUser) * 67) % 360}, 60%, 45%), hsl(${(users.indexOf(selectedUser) * 67 + 40) % 360}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", fontWeight: 800, color: "#FFF" }}>{(selectedUser.name || selectedUser.email || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>
                   <div>
-                    <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#FFF" }}>{selectedUser.name}</h2>
+                    <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#FFF" }}>{selectedUser.name || selectedUser.email}</h2>
                     <p style={{ margin: "2px 0 0", fontSize: "0.82rem", color: "#666" }}>{selectedUser.email}</p>
                     {selectedUser.gymId && <p style={{ margin: "2px 0 0", fontSize: "0.72rem", color: "#FF6B35" }}>🏢 {gyms.find(g => g.id === selectedUser.gymId)?.name}</p>}
                   </div>
@@ -373,9 +478,9 @@ export default function AdminPanel() {
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12, marginBottom: 24 }}>
                 {[
-                  { label: "Joined", value: selectedUser.joined, color: "#3498DB" },
-                  { label: "Workouts", value: selectedUser.workouts, color: "#FF6B35" },
-                  { label: "Last Active", value: selectedUser.lastActive, color: "#2ECC71" },
+                  { label: "Joined", value: selectedUser.joined || "—", color: "#3498DB" },
+                  { label: "Workouts", value: selectedUser.workouts || 0, color: "#FF6B35" },
+                  { label: "Last Active", value: selectedUser.lastActive || "—", color: "#2ECC71" },
                   { label: "Expires", value: selectedUser.expires || "N/A", color: "#9B59B6" },
                 ].map((s, i) => (
                   <div key={i} style={{ padding: "14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -389,25 +494,25 @@ export default function AdminPanel() {
                 <div style={{ marginBottom: 24 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                     <span style={{ fontSize: "0.72rem", color: "#888", fontWeight: 600 }}>Trial Progress</span>
-                    <span style={{ fontSize: "0.72rem", color: selectedUser.workouts >= TRIAL_LIMIT ? "#E74C3C" : "#F39C12", fontWeight: 700 }}>{selectedUser.workouts}/{TRIAL_LIMIT}</span>
+                    <span style={{ fontSize: "0.72rem", color: (selectedUser.workouts || 0) >= TRIAL_LIMIT ? "#E74C3C" : "#F39C12", fontWeight: 700 }}>{selectedUser.workouts || 0}/{TRIAL_LIMIT}</span>
                   </div>
                   <div style={{ height: 8, borderRadius: 4, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-                    <div style={{ width: `${Math.min((selectedUser.workouts / TRIAL_LIMIT) * 100, 100)}%`, height: "100%", borderRadius: 4, background: selectedUser.workouts >= TRIAL_LIMIT ? "linear-gradient(90deg, #E74C3C, #C0392B)" : "linear-gradient(90deg, #FF6B35, #FF2D2D)" }} />
+                    <div style={{ width: `${Math.min(((selectedUser.workouts || 0) / TRIAL_LIMIT) * 100, 100)}%`, height: "100%", borderRadius: 4, background: (selectedUser.workouts || 0) >= TRIAL_LIMIT ? "linear-gradient(90deg, #E74C3C, #C0392B)" : "linear-gradient(90deg, #FF6B35, #FF2D2D)" }} />
                   </div>
                 </div>
               )}
 
-              {selectedUser.status !== "admin" && (
+              {selectedUser.role !== "admin" && (
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button onClick={() => { togglePremium(selectedUser.id); setSelectedUser(prev => ({ ...prev, status: prev.status === "premium" ? "trial" : "premium" })); }}
+                  <button onClick={() => togglePremium(selectedUser.id)}
                     style={{ padding: "10px 20px", borderRadius: 10, border: "none", cursor: "pointer", background: selectedUser.status === "premium" ? "rgba(231,76,60,0.15)" : "linear-gradient(135deg, #2ECC71, #27AE60)", color: selectedUser.status === "premium" ? "#E74C3C" : "#FFF", fontSize: "0.78rem", fontWeight: 700 }}>
                     {selectedUser.status === "premium" ? "⬇ Downgrade" : "⬆ Upgrade to Premium"}
                   </button>
-                  <button onClick={() => { grantFreeAccess(selectedUser.id); setSelectedUser(prev => ({ ...prev, status: "premium", expires: "2125-04-07" })); }}
+                  <button onClick={() => grantFreeAccess(selectedUser.id)}
                     style={{ padding: "10px 20px", borderRadius: 10, cursor: "pointer", background: "rgba(255,107,53,0.1)", border: "1px solid rgba(255,107,53,0.25)", color: "#FF6B35", fontSize: "0.78rem", fontWeight: 700 }}>
                     🎁 Free Lifetime
                   </button>
-                  <button onClick={() => { resetTrial(selectedUser.id); setSelectedUser(prev => ({ ...prev, workouts: 0, status: "trial" })); }}
+                  <button onClick={() => resetTrial(selectedUser.id)}
                     style={{ padding: "10px 20px", borderRadius: 10, cursor: "pointer", background: "rgba(52,152,219,0.1)", border: "1px solid rgba(52,152,219,0.25)", color: "#3498DB", fontSize: "0.78rem", fontWeight: 700 }}>
                     🔄 Reset Trial
                   </button>
@@ -433,7 +538,7 @@ export default function AdminPanel() {
                 { label: "Total Gyms", value: gyms.length, icon: "🏢", color: "#FF6B35" },
                 { label: "B2B Revenue", value: "$" + stats.gymRevenue.toFixed(0), icon: "💰", color: "#2ECC71" },
                 { label: "Gym Members", value: users.filter(u => u.gymId !== null).length, icon: "👥", color: "#3498DB" },
-                { label: "Total Equipment", value: gyms.reduce((a, g) => a + g.equipment.reduce((b, e) => b + e.qty, 0), 0), icon: "🏋️", color: "#9B59B6" },
+                { label: "Total Equipment", value: gyms.reduce((a, g) => a + (g.equipment || []).reduce((b, e) => b + (e.qty || 0), 0), 0), icon: "🏋️", color: "#9B59B6" },
               ].map((kpi, i) => (
                 <div key={i} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "18px 16px", border: "1px solid rgba(255,255,255,0.06)", animation: `fadeIn 0.4s ease ${i * 0.05}s both` }}>
                   <span style={{ fontSize: "1.2rem" }}>{kpi.icon}</span>
@@ -445,6 +550,7 @@ export default function AdminPanel() {
 
             {/* Gym Cards */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {gyms.length === 0 && <div style={{ padding: 40, textAlign: "center", color: "#555", fontSize: "0.9rem" }}>No partner gyms yet. Add gyms via the seed script or Firebase Console.</div>}
               {gyms.map((gym, i) => (
                 <div key={gym.id} onClick={() => setSelectedGym(gym)}
                   style={{
@@ -466,18 +572,18 @@ export default function AdminPanel() {
                       <div style={{ fontSize: "0.75rem", color: "#666", marginLeft: 30 }}>📍 {gym.location} • Owner: {gym.owner}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "#2ECC71" }}>${gym.monthlyFee}<span style={{ fontSize: "0.6rem", color: "#666" }}>/mo</span></div>
+                      <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "#2ECC71" }}>${gym.monthlyFee || 0}<span style={{ fontSize: "0.6rem", color: "#666" }}>/mo</span></div>
                     </div>
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 10 }}>
                     {[
                       { label: "Members", value: gymMembers(gym.id).length, color: "#3498DB" },
-                      { label: "Equipment", value: gym.equipment.length + " types", color: "#FF6B35" },
-                      { label: "Trainers", value: gym.trainers.length, color: "#9B59B6" },
-                      { label: "Avg Daily", value: gym.avgDailyUsers, color: "#2ECC71" },
-                      { label: "Peak Hour", value: gym.peakHour, color: "#F39C12" },
-                      { label: "Gym Code", value: gym.code, color: "#E67E22" },
+                      { label: "Equipment", value: (gym.equipment || []).length + " types", color: "#FF6B35" },
+                      { label: "Trainers", value: (gym.trainers || []).length, color: "#9B59B6" },
+                      { label: "Avg Daily", value: gym.avgDailyUsers || 0, color: "#2ECC71" },
+                      { label: "Peak Hour", value: gym.peakHour || "—", color: "#F39C12" },
+                      { label: "Gym Code", value: gym.code || "—", color: "#E67E22" },
                     ].map((s, j) => (
                       <div key={j} style={{ padding: "10px", borderRadius: 8, background: "rgba(255,255,255,0.03)" }}>
                         <div style={{ fontSize: "0.9rem", fontWeight: 700, color: s.color }}>{s.value}</div>
@@ -508,7 +614,7 @@ export default function AdminPanel() {
                   <div style={{ fontSize: "0.8rem", color: "#666", marginLeft: 34 }}>📍 {selectedGym.location}</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#2ECC71" }}>${selectedGym.monthlyFee}<span style={{ fontSize: "0.7rem", color: "#666" }}>/mo</span></div>
+                  <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#2ECC71" }}>${selectedGym.monthlyFee || 0}<span style={{ fontSize: "0.7rem", color: "#666" }}>/mo</span></div>
                   <div style={{ fontSize: "0.65rem", color: "#555" }}>Since {selectedGym.joined}</div>
                 </div>
               </div>
@@ -524,7 +630,7 @@ export default function AdminPanel() {
                 <div style={{ padding: "14px", borderRadius: 10, background: "rgba(255,107,53,0.06)", border: "1px solid rgba(255,107,53,0.15)" }}>
                   <div style={{ fontSize: "0.6rem", color: "#FF6B35", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 4 }}>Gym Signup Code</div>
                   <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "#FF6B35", fontFamily: "'Courier New', monospace", letterSpacing: "2px" }}>{selectedGym.code}</div>
-                  <div style={{ fontSize: "0.65rem", color: "#666", marginTop: 4 }}>Used {selectedGym.codeUses} times</div>
+                  <div style={{ fontSize: "0.65rem", color: "#666", marginTop: 4 }}>Used {selectedGym.codeUses || 0} times</div>
                 </div>
                 <div style={{ padding: "14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                   <div style={{ fontSize: "0.6rem", color: "#555", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 4 }}>Plan</div>
@@ -539,11 +645,11 @@ export default function AdminPanel() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 10 }}>
                 {[
                   { label: "Members", value: gymMembers(selectedGym.id).length, color: "#3498DB" },
-                  { label: "Trainers", value: selectedGym.trainers.length, color: "#9B59B6" },
-                  { label: "Avg Daily Users", value: selectedGym.avgDailyUsers, color: "#2ECC71" },
-                  { label: "Peak Hour", value: selectedGym.peakHour, color: "#F39C12" },
-                  { label: "Equipment Types", value: selectedGym.equipment.length, color: "#FF6B35" },
-                  { label: "Total Sessions", value: selectedGym.equipment.reduce((a, e) => a + e.totalSessions, 0).toLocaleString(), color: "#E74C3C" },
+                  { label: "Trainers", value: (selectedGym.trainers || []).length, color: "#9B59B6" },
+                  { label: "Avg Daily Users", value: selectedGym.avgDailyUsers || 0, color: "#2ECC71" },
+                  { label: "Peak Hour", value: selectedGym.peakHour || "—", color: "#F39C12" },
+                  { label: "Equipment Types", value: (selectedGym.equipment || []).length, color: "#FF6B35" },
+                  { label: "Total Sessions", value: (selectedGym.equipment || []).reduce((a, e) => a + (e.totalSessions || 0), 0).toLocaleString(), color: "#E74C3C" },
                 ].map((s, i) => (
                   <div key={i} style={{ padding: "12px", borderRadius: 10, background: "rgba(255,255,255,0.03)", textAlign: "center" }}>
                     <div style={{ fontSize: "1.1rem", fontWeight: 800, color: s.color }}>{s.value}</div>
@@ -556,8 +662,8 @@ export default function AdminPanel() {
             {/* Equipment Analytics */}
             <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "24px", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 20 }}>
               <h3 style={{ margin: "0 0 16px", color: "#FF6B35", fontSize: "0.8rem", fontWeight: 800, letterSpacing: "1px" }}>🏋️ EQUIPMENT ANALYTICS</h3>
-              {selectedGym.equipment.sort((a, b) => b.totalSessions - a.totalSessions).map((eq, i) => {
-                const maxSessions = Math.max(...selectedGym.equipment.map(e => e.totalSessions));
+              {(selectedGym.equipment || []).sort((a, b) => (b.totalSessions || 0) - (a.totalSessions || 0)).map((eq, i) => {
+                const maxSessions = Math.max(...(selectedGym.equipment || []).map(e => e.totalSessions || 0), 1);
                 const colors = ["#FF6B35", "#FF2D2D", "#3498DB", "#2ECC71", "#9B59B6", "#F39C12"];
                 return (
                   <div key={i} style={{ marginBottom: 14, animation: `slideIn 0.3s ease ${i * 0.06}s both` }}>
@@ -566,19 +672,20 @@ export default function AdminPanel() {
                         <span style={{ fontSize: "1.1rem", fontWeight: 900, color: colors[i % colors.length], minWidth: 24 }}>#{i + 1}</span>
                         <div>
                           <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#EEE" }}>{eq.name}</div>
-                          <div style={{ fontSize: "0.65rem", color: "#555" }}>{eq.qty} units • {eq.totalSessions.toLocaleString()} sessions</div>
+                          <div style={{ fontSize: "0.65rem", color: "#555" }}>{eq.qty} units • {(eq.totalSessions || 0).toLocaleString()} sessions</div>
                         </div>
                       </div>
                       <div style={{ fontSize: "0.8rem", fontWeight: 800, color: colors[i % colors.length] }}>
-                        {Math.round((eq.totalSessions / selectedGym.equipment.reduce((a, e) => a + e.totalSessions, 0)) * 100)}%
+                        {Math.round(((eq.totalSessions || 0) / (selectedGym.equipment || []).reduce((a, e) => a + (e.totalSessions || 0), 0) || 1) * 100)}%
                       </div>
                     </div>
                     <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-                      <div style={{ width: `${(eq.totalSessions / maxSessions) * 100}%`, height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${colors[i % colors.length]}, ${colors[i % colors.length]}88)`, transition: "width 0.8s" }} />
+                      <div style={{ width: `${((eq.totalSessions || 0) / maxSessions) * 100}%`, height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${colors[i % colors.length]}, ${colors[i % colors.length]}88)`, transition: "width 0.8s" }} />
                     </div>
                   </div>
                 );
               })}
+              {(selectedGym.equipment || []).length === 0 && <div style={{ padding: 20, textAlign: "center", color: "#555", fontSize: "0.85rem" }}>No equipment data yet</div>}
             </div>
 
             {/* Gym Members */}
@@ -587,14 +694,14 @@ export default function AdminPanel() {
               {gymMembers(selectedGym.id).map((u, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 8, background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${u.id * 37}, 60%, 45%), hsl(${u.id * 37 + 40}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 800, color: "#FFF" }}>{u.name.split(" ").map(n => n[0]).join("")}</div>
+                    <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${(i * 67) % 360}, 60%, 45%), hsl(${(i * 67 + 40) % 360}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 800, color: "#FFF" }}>{(u.name || u.email || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>
                     <div>
-                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.name}</div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{u.name || u.email}</div>
                       <div style={{ fontSize: "0.65rem", color: "#555" }}>{u.email}</div>
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: "0.75rem", color: "#888" }}>{u.workouts} workouts</span>
+                    <span style={{ fontSize: "0.75rem", color: "#888" }}>{u.workouts || 0} workouts</span>
                     <StatusBadge status={u.status} />
                   </div>
                 </div>
@@ -606,22 +713,25 @@ export default function AdminPanel() {
 
             {/* Trainers */}
             <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "24px", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <h3 style={{ margin: "0 0 16px", color: "#9B59B6", fontSize: "0.8rem", fontWeight: 800, letterSpacing: "1px" }}>🏅 TRAINERS ({selectedGym.trainers.length})</h3>
+              <h3 style={{ margin: "0 0 16px", color: "#9B59B6", fontSize: "0.8rem", fontWeight: 800, letterSpacing: "1px" }}>🏅 TRAINERS ({(selectedGym.trainers || []).length})</h3>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {selectedGym.trainers.map((t, i) => (
+                {(selectedGym.trainers || []).map((t, i) => (
                   <div key={i} style={{ padding: "12px 18px", borderRadius: 10, background: "rgba(155,89,182,0.08)", border: "1px solid rgba(155,89,182,0.2)", fontSize: "0.85rem", fontWeight: 600, color: "#CCC" }}>
                     👤 {t}
                   </div>
                 ))}
+                {(selectedGym.trainers || []).length === 0 && <div style={{ color: "#555", fontSize: "0.85rem" }}>No trainers listed</div>}
               </div>
-              <div style={{ marginTop: 14 }}>
-                <div style={{ fontSize: "0.7rem", color: "#666" }}>Top Exercises at this gym:</div>
-                <div style={{ display: "flex", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
-                  {selectedGym.topExercises.map((ex, i) => (
-                    <span key={i} style={{ padding: "4px 12px", borderRadius: 20, background: "rgba(255,107,53,0.08)", border: "1px solid rgba(255,107,53,0.15)", fontSize: "0.72rem", color: "#FF6B35" }}>{ex}</span>
-                  ))}
+              {(selectedGym.topExercises || []).length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                  <div style={{ fontSize: "0.7rem", color: "#666" }}>Top Exercises at this gym:</div>
+                  <div style={{ display: "flex", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
+                    {selectedGym.topExercises.map((ex, i) => (
+                      <span key={i} style={{ padding: "4px 12px", borderRadius: 20, background: "rgba(255,107,53,0.08)", border: "1px solid rgba(255,107,53,0.15)", fontSize: "0.72rem", color: "#FF6B35" }}>{ex}</span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}
@@ -677,6 +787,7 @@ export default function AdminPanel() {
             )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {promos.length === 0 && <div style={{ padding: 40, textAlign: "center", color: "#555", fontSize: "0.9rem" }}>No promo codes yet. Create one above.</div>}
               {promos.map((p, i) => (
                 <div key={p.id} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "20px", border: `1px solid ${p.active ? "rgba(255,255,255,0.06)" : "rgba(231,76,60,0.15)"}`, opacity: p.active ? 1 : 0.6, animation: `slideIn 0.3s ease ${i * 0.05}s both` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
@@ -685,7 +796,7 @@ export default function AdminPanel() {
                         <span style={{ fontSize: "1.1rem", fontWeight: 900, color: "#FF6B35", fontFamily: "'Courier New', monospace", letterSpacing: "2px" }}>{p.code}</span>
                         <span style={{ fontSize: "0.6rem", padding: "2px 8px", borderRadius: 20, fontWeight: 700, background: p.active ? "rgba(46,204,113,0.12)" : "rgba(231,76,60,0.12)", color: p.active ? "#2ECC71" : "#E74C3C", border: `1px solid ${p.active ? "rgba(46,204,113,0.25)" : "rgba(231,76,60,0.25)"}` }}>{p.active ? "ACTIVE" : "DISABLED"}</span>
                       </div>
-                      <div style={{ fontSize: "0.8rem", color: "#AAA" }}>{p.type === "percent" ? `${p.discount}% off` : `$${p.discount} off`} • Used {p.uses}/{p.maxUses}{p.expires ? ` • Expires ${p.expires}` : " • No expiry"}</div>
+                      <div style={{ fontSize: "0.8rem", color: "#AAA" }}>{p.type === "percent" ? `${p.discount}% off` : `$${p.discount} off`} • Used {p.uses || 0}/{p.maxUses}{p.expires ? ` • Expires ${p.expires}` : " • No expiry"}</div>
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                       <button onClick={() => togglePromo(p.id)} style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", background: p.active ? "rgba(231,76,60,0.1)" : "rgba(46,204,113,0.1)", border: `1px solid ${p.active ? "rgba(231,76,60,0.25)" : "rgba(46,204,113,0.25)"}`, color: p.active ? "#E74C3C" : "#2ECC71", fontSize: "0.7rem", fontWeight: 700 }}>{p.active ? "Disable" : "Enable"}</button>
@@ -693,7 +804,7 @@ export default function AdminPanel() {
                     </div>
                   </div>
                   <div style={{ marginTop: 12, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-                    <div style={{ width: `${(p.uses / p.maxUses) * 100}%`, height: "100%", borderRadius: 2, background: p.uses / p.maxUses > 0.8 ? "linear-gradient(90deg, #E74C3C, #C0392B)" : "linear-gradient(90deg, #FF6B35, #FF2D2D)" }} />
+                    <div style={{ width: `${((p.uses || 0) / (p.maxUses || 1)) * 100}%`, height: "100%", borderRadius: 2, background: (p.uses || 0) / (p.maxUses || 1) > 0.8 ? "linear-gradient(90deg, #E74C3C, #C0392B)" : "linear-gradient(90deg, #FF6B35, #FF2D2D)" }} />
                   </div>
                 </div>
               ))}
@@ -705,29 +816,26 @@ export default function AdminPanel() {
         {activeSection === "activity" && (
           <div style={{ animation: "fadeIn 0.4s ease" }}>
             <h2 style={{ margin: "0 0 4px", fontSize: "1.3rem", fontWeight: 800, color: "#FFF" }}>Recent Activity</h2>
-            <p style={{ margin: "0 0 24px", fontSize: "0.8rem", color: "#555" }}>Latest events across the platform</p>
+            <p style={{ margin: "0 0 24px", fontSize: "0.8rem", color: "#555" }}>Latest workouts across the platform</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {[
-                { time: "2 min ago", event: "Workout completed", user: "Maria Santos", detail: "12 rolls • Chest & Arms • PowerHouse BK", icon: "🎲", color: "#FF6B35" },
-                { time: "18 min ago", event: "New signup", user: "Nicole May", detail: "Used gym code POWER-BK", icon: "📥", color: "#2ECC71" },
-                { time: "34 min ago", event: "Premium upgrade", user: "Lisa Morales", detail: "Yearly plan • $99.99 (independent user)", icon: "💎", color: "#9B59B6" },
-                { time: "1 hr ago", event: "Gym joined", user: "PowerHouse BK", detail: "New gym partner • Bay Ridge, Brooklyn", icon: "🏢", color: "#FF6B35" },
-                { time: "1 hr ago", event: "Promo code used", user: "Chris Walker", detail: "LAUNCH25 — 25% off • via Flex Fitness NYC", icon: "🎟️", color: "#F39C12" },
-                { time: "2 hrs ago", event: "Workout completed", user: "Derek Jones", detail: "20 rolls • Full Body • Iron District Gym", icon: "🎲", color: "#FF6B35" },
-                { time: "2 hrs ago", event: "Trial near limit", user: "Jay Thompson", detail: "9/10 workouts used • Flex Fitness NYC member", icon: "⚠️", color: "#E74C3C" },
-                { time: "3 hrs ago", event: "PR achieved", user: "Mike Rivera", detail: "Bench Press — 225 lbs • Iron District Gym", icon: "🏆", color: "#F39C12" },
-                { time: "4 hrs ago", event: "Equipment updated", user: "Iron District Gym", detail: "Added 2x Kettlebells to inventory", icon: "🏋️", color: "#3498DB" },
-                { time: "5 hrs ago", event: "Monthly report sent", user: "System", detail: "March report emailed to all gym partners", icon: "📧", color: "#2ECC71" },
-              ].map((a, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 10, background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent", animation: `slideIn 0.3s ease ${i * 0.03}s both` }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: `${a.color}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}>{a.icon}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>{a.event} <span style={{ color: a.color, fontWeight: 700 }}>• {a.user}</span></div>
-                    <div style={{ fontSize: "0.7rem", color: "#555", marginTop: 1 }}>{a.detail}</div>
+              {recentWorkouts.length === 0 && <div style={{ padding: 40, textAlign: "center", color: "#555", fontSize: "0.9rem" }}>No workout activity yet. Activity will appear here as users complete workouts.</div>}
+              {recentWorkouts.map((w, i) => {
+                const userName = getUserName(w.uid);
+                const dateStr = w.date || (w.createdAt?.toDate ? w.createdAt.toDate().toLocaleDateString() : "—");
+                const totalReps = w.totalReps || "—";
+                const rolls = w.log?.length || "—";
+                const groups = w.log ? [...new Set(w.log.map(l => l.group).filter(Boolean))].join(", ") : "";
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 10, background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent", animation: `slideIn 0.3s ease ${i * 0.03}s both` }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: "rgba(255,107,53,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}>🎲</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#EEE" }}>Workout completed <span style={{ color: "#FF6B35", fontWeight: 700 }}>• {userName}</span></div>
+                      <div style={{ fontSize: "0.7rem", color: "#555", marginTop: 1 }}>{rolls} rolls • {totalReps} reps{groups ? ` • ${groups}` : ""}</div>
+                    </div>
+                    <div style={{ fontSize: "0.65rem", color: "#444", whiteSpace: "nowrap" }}>{dateStr}</div>
                   </div>
-                  <div style={{ fontSize: "0.65rem", color: "#444", whiteSpace: "nowrap" }}>{a.time}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
