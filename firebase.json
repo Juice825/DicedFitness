@@ -8,7 +8,9 @@
       "App.js",
       "index.js",
       "firebase.js",
+      "firebase-web.js",
       "seed.js",
+      "seed-admin.js",
       "new_exercises.js",
       "**/package*.json",
       "**/app.json",
@@ -27,6 +29,12 @@
           { "key": "X-Frame-Options", "value": "DENY" },
           { "key": "X-Content-Type-Options", "value": "nosniff" },
           { "key": "Referrer-Policy", "value": "no-referrer" }
+        ]
+      },
+      {
+        "source": "/admin_panel_v2.jsx",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-store" }
         ]
       }
     ],
