@@ -24,15 +24,25 @@ export default function AdminPanel() {
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", type: "percent", maxUses: "", expires: "" });
   const [toast, setToast] = useState(null);
   const [dataLoading, setDataLoading] = useState(true);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
 
   // ─── Load all data on mount (auth already handled by dashboard.html Gate) ───
   useEffect(() => {
     const loadAll = async () => {
       setDataLoading(true);
       try {
-        // Users
+        // Users — load profiles then count actual workouts from subcollections
         const usersSnap = await getDocs(collection(db, 'users'));
-        setUsers(usersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        const userList = await Promise.all(usersSnap.docs.map(async (d) => {
+          const profile = { id: d.id, ...d.data() };
+          try {
+            const wSnap = await getDocs(collection(db, 'users', d.id, 'workouts'));
+            profile.workouts = wSnap.size;
+          } catch (_) {}
+          return profile;
+        }));
+        setUsers(userList);
 
         // Gyms
         const gymsSnap = await getDocs(collection(db, 'gyms'));
@@ -114,6 +124,16 @@ export default function AdminPanel() {
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, workouts: 0, status: "trial", expires: null } : u));
       if (selectedUser?.id === userId) setSelectedUser(prev => ({ ...prev, workouts: 0, status: "trial" }));
       showToast("Trial reset — 10 free workouts restored");
+    } catch (e) { showToast("Error: " + (e.code || e.message)); }
+  };
+
+  const saveName = async (userId, newName) => {
+    try {
+      await updateDoc(doc(db, 'users', userId), { name: newName });
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, name: newName } : u));
+      if (selectedUser?.id === userId) setSelectedUser(prev => ({ ...prev, name: newName }));
+      setEditingName(false);
+      showToast("Name updated");
     } catch (e) { showToast("Error: " + (e.code || e.message)); }
   };
 
@@ -382,13 +402,30 @@ export default function AdminPanel() {
         {/* ========== USER DETAIL ========== */}
         {activeSection === "users" && selectedUser && (
           <div style={{ animation: "fadeIn 0.3s ease" }}>
-            <button onClick={() => setSelectedUser(null)} style={{ padding: "7px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#999", cursor: "pointer", fontSize: "0.75rem", marginBottom: 20 }}>← Back to Users</button>
+            <button onClick={() => { setSelectedUser(null); setEditingName(false); }} style={{ padding: "7px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#999", cursor: "pointer", fontSize: "0.75rem", marginBottom: 20 }}>← Back to Users</button>
             <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "28px", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 20 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, marginBottom: 24 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                   <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, hsl(${(users.indexOf(selectedUser) * 67) % 360}, 60%, 45%), hsl(${(users.indexOf(selectedUser) * 67 + 40) % 360}, 60%, 35%))`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", fontWeight: 800, color: "#FFF" }}>{(selectedUser.name || selectedUser.email || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>
                   <div>
-                    <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#FFF" }}>{selectedUser.name || selectedUser.email}</h2>
+                    {editingName ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <input type="text" value={nameInput} onChange={e => setNameInput(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') saveName(selectedUser.id, nameInput.trim()); if (e.key === 'Escape') setEditingName(false); }}
+                          autoFocus
+                          style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(255,107,53,0.4)", background: "rgba(255,255,255,0.06)", color: "#FFF", fontSize: "1.1rem", fontWeight: 700, outline: "none", width: 220 }} />
+                        <button onClick={() => saveName(selectedUser.id, nameInput.trim())}
+                          style={{ padding: "6px 14px", borderRadius: 8, border: "none", cursor: "pointer", background: "linear-gradient(135deg, #2ECC71, #27AE60)", color: "#FFF", fontSize: "0.72rem", fontWeight: 700 }}>Save</button>
+                        <button onClick={() => setEditingName(false)}
+                          style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#888", cursor: "pointer", fontSize: "0.72rem" }}>Cancel</button>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#FFF" }}>{selectedUser.name || "(No name)"}</h2>
+                        <button onClick={() => { setNameInput(selectedUser.name || ""); setEditingName(true); }}
+                          style={{ padding: "3px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#888", cursor: "pointer", fontSize: "0.65rem" }}>Edit</button>
+                      </div>
+                    )}
                     <p style={{ margin: "2px 0 0", fontSize: "0.82rem", color: "#666" }}>{selectedUser.email}</p>
                     {selectedUser.gymId && <p style={{ margin: "2px 0 0", fontSize: "0.72rem", color: "#FF6B35" }}>🏢 {gyms.find(g => g.id === selectedUser.gymId)?.name}</p>}
                   </div>
